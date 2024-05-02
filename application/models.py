@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
+from pytz import timezone
 
 db = SQLAlchemy()
 
@@ -8,7 +10,7 @@ class User(db.Model):
     name=db.Column(db.String)
     email=db.Column(db.String,unique=True)
     fs_uniquifier = db.Column(db.String(255),unique=True,nullable=False)
-    role_id = db.Colum(db.String,db.ForeignKey('role.id'))
+    role_id = db.Column(db.String,db.ForeignKey('role.id'))
     role = db.relationship('Role')
 
 class Role(db.Model):
@@ -21,10 +23,10 @@ class Book(db.Model):
     name=db.Column(db.String,unique=True)
     file_name=db.Column(db.String)
     author=db.Column(db.String)
-    section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
+    #section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
     is_issued = db.Column(db.Boolean, default = False)    
     create_date=db.Column(db.DateTime)
-    section = db.relationship('Section')
+    #section = db.relationship('Section')
 
 class Section(db.Model):
     id=db.Column(db.Integer,primary_key=True)
@@ -62,3 +64,4 @@ class Request(db.Model):
     __table_args__ = (
         db.PrimaryKeyConstraint('book_id', 'username'),
     )
+
