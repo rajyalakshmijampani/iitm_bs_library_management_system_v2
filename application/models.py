@@ -1,22 +1,29 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_security import UserMixin, RoleMixin
 from sqlalchemy.sql import func
 from pytz import timezone
 
 db = SQLAlchemy()
 
-class User(db.Model):
-    username=db.Column(db.String,primary_key=True)
+class User(db.Model,UserMixin):
+    id=db.Column(db.Integer(),primary_key=True)
+    email=db.Column(db.String,unique=True)
     password=db.Column(db.String)
     name=db.Column(db.String)
-    email=db.Column(db.String,unique=True)
+    active = db.Column(db.Boolean)
     fs_uniquifier = db.Column(db.String(255),unique=True,nullable=False)
-    role_id = db.Column(db.String,db.ForeignKey('role.id'))
-    role = db.relationship('Role')
+    roles = db.relationship('Role',secondary='roles_users',
+                            backref = db.backref('user',lazy='dynamic'))
 
-class Role(db.Model):
-    id = db.Column(db.String,primary_key=True)
+class Role(db.Model,RoleMixin):
+    id = db.Column(db.Integer(),primary_key=True)
     name = db.Column(db.String,unique=True)
     description = db.Column(db.String(255))
+
+class RolesUsers(db.Model):
+    id = db.Column(db.Integer(),primary_key=True)
+    user_id = db.Column('user_id',db.Integer(),db.ForeignKey('user.id'))
+    role_id = db.Column('role_id',db.Integer(),db.ForeignKey('role.id'))
 
 class Book(db.Model):
     id=db.Column(db.Integer,primary_key=True)
@@ -35,33 +42,34 @@ class Section(db.Model):
 
 class Issue(db.Model):
     id=db.Column(db.Integer,primary_key=True)
-    book_id=db.Column(db.Integer,db.ForeignKey('book.id'))
-    username=db.Column(db.String,db.ForeignKey('user.username'))
+    user_id=db.Column(db.String,db.ForeignKey('user.id'))
+    book_id=db.Column(db.Integer,db.ForeignKey('book.id'))    
     issue_date=db.Column(db.DateTime)
     return_date=db.Column(db.DateTime)
 
 class Purchase(db.Model):
+    user_id=db.Column(db.String,db.ForeignKey('user.id'))
     book_id=db.Column(db.Integer,db.ForeignKey('book.id'))
-    username=db.Column(db.String,db.ForeignKey('user.username'))
-
+    
     __table_args__ = (
-        db.PrimaryKeyConstraint('book_id', 'username'),
+        db.PrimaryKeyConstraint('user_id','book_id'),
     )
 
 class Rating(db.Model):
-    username=db.Column(db.String,db.ForeignKey('user.username'))
+    user_id=db.Column(db.String,db.ForeignKey('user.id'))
     book_id=db.Column(db.Integer,db.ForeignKey('book.id'))
     rating = db.Column(db.Integer)
 
     __table_args__ = (
-        db.PrimaryKeyConstraint('username', 'book_id'),
+        db.PrimaryKeyConstraint('user_id', 'book_id'),
     )
 
 class Request(db.Model):
+    user_id=db.Column(db.String,db.ForeignKey('user.id'))
     book_id=db.Column(db.Integer,db.ForeignKey('book.id'))
-    username=db.Column(db.String,db.ForeignKey('user.username'))
+    status=db.Column(db.String,default='PENDING')  # APPROVED/PENDING/REJECTED
 
     __table_args__ = (
-        db.PrimaryKeyConstraint('book_id', 'username'),
+        db.PrimaryKeyConstraint('user_id', 'book_id'),
     )
 
