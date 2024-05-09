@@ -28,7 +28,7 @@ class RolesUsers(db.Model):
 class Book(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String,unique=True)
-    file_name=db.Column(db.String)
+    content=db.Column(db.String)
     author=db.Column(db.String)
     #section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
     is_issued = db.Column(db.Boolean, default = False)    
