@@ -47,7 +47,6 @@ book_fields = {
 
 @app.get('/books')
 @auth_required("token")
-@roles_required("admin")
 def get_books():
     books = Book.query.all()
     if len(books) == 0:
