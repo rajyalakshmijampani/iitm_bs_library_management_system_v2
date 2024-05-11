@@ -37,7 +37,7 @@ export default {
                         <td style="vertical-align: middle;">{{book.name}}</td>
                         <td style="vertical-align: middle;">Section</td>
                         <td v-if="role=='admin'" style="vertical-align: middle;">
-                            <router-link to="/books/add" tag="button" class="button-link" 
+                            <router-link to="/books/download" tag="button" class="button-link" 
                                 style="background-color: white; color: #015668; border: 2px solid #015668; border-radius: 9px;  padding: 6px 12px; vertical-align: middle;">
                                 <i class="fa-solid fa-download"></i>
                             </router-link>
@@ -45,10 +45,9 @@ export default {
                                 style="background-color: white; color: #015668; border: 2px solid #015668; border-radius: 9px;  padding: 6px 12px; vertical-align: middle;">
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </router-link>
-                            <router-link to="/books/add" tag="button" class="button-link" 
-                                style="background-color: white; color: crimson; border: 2px solid crimson; border-radius: 9px;  padding: 6px 12px; vertical-align: middle;">
+                            <button class="btn btn-outline-danger" @click='deleteBook(book.id)' style="border: 2px solid; border-radius: 9px;">
                                 <i class="fa-regular fa-trash-can"></i>
-                            </router-link>
+                            </button>
                         </td>
                         <td v-if="role=='user'" style="vertical-align: middle;">{{book.author}}</td>
                     </tr>
@@ -78,6 +77,18 @@ export default {
             this.message = null
             this.message_type = null
         },
+        async deleteBook(id){
+            const res = await fetch(`/books/delete/${id}`, {
+                headers: {
+                  'Authentication-Token': this.token,
+                },
+              })
+            const data = await res.json()
+            if (res.ok) {
+                alert(data.message)
+                window.location.reload();
+            }
+        },
         async loadData() {
             const res = await fetch('/books', {
                 headers: {
@@ -88,10 +99,6 @@ export default {
                 const data = await res.json().catch((e) => {})
                 this.allBooks = data
                 this.no_of_books = Object.keys(data).length
-                }
-            else {
-                this.message = res.statusText
-                this.message_type = 'error'
                 }
         },
     }

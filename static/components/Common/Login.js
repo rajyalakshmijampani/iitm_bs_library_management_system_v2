@@ -13,7 +13,7 @@ export default {
             </a>
             <div style="text-align: center;margin-top:3vh; margin-bottom:8vh;align-items:center">
                 <br><br><br>
-                <h1 style="color: #015668;">Welcome to ClickReads..!</h1>
+                <h1 style="color: #015668;">Login to continue..!</h1>
                 <br>
                 <div style="margin: auto; color: red;">
                     {{ error }}
@@ -37,7 +37,7 @@ export default {
                 <button type="submit" class="btn btn-success" 
                     style="background-color: #015668;" @click='login'>Login</button> 
                 <br><br>
-                <a href="/register">New User? Register!</a>
+                <router-link to="/register">New User? Register!</router-link>
             </div>    
         </div>
     </div>
@@ -54,7 +54,7 @@ export default {
     },
     components:{
         Libdashboard,
-        Userdashboard,
+        Userdashboard
     },
     methods: {
         async login() {
@@ -66,7 +66,6 @@ export default {
                 body: JSON.stringify(this.cred),
             })
             const data = await res.json()
-            console.log(data)
             if (res.ok) {
                 localStorage.setItem('auth-token', data.token)
                 localStorage.setItem('role', data.role)
@@ -77,6 +76,6 @@ export default {
             else{
                 this.error = data.message
             }
-        },
+        }
     }
 }

@@ -6,16 +6,16 @@ export default {
         </div>
         <div class="col">
             <a class="navbar-brand" href="/">
-                <img src="http://localhost:5000/static/images/logo.png" alt="ClickReads" height="60" style="margin-top:5vh;">
+                <img src="http://localhost:5000/static/images/logo.png" alt="ClickReads" height="60" style="margin-top:3vh;">
             </a>
-            <div style="text-align: center;margin-top:3vh; margin-bottom:8vh;align-items:center">
+            <div style="text-align: center;margin-top:1vh; margin-bottom:8vh;align-items:center">
                 <br><br><br>
-                <h1 style="color: #015668;">New User Registration</h1>
+                <h3 style="color: #015668;">New User Registration</h3>
                 <br>
                 <div style="margin: auto; color: red;">
                     {{ error }}
                 </div>
-                <div style="margin: auto; color: green;">
+                <div style="margin: auto; color: red;">
                     {{ success }}
                 </div>
                 <br>
@@ -36,11 +36,17 @@ export default {
                         placeholder="Password" v-model='cred.password' required>
                     <label for="password">Password</label>
                 </div>
+                <br>
+                <div class="form-floating" style="width: 75%;margin: auto">
+                    <input type="password" class="form-control" name="cnfpassword" 
+                        placeholder="Confirm Password" required>
+                    <label for="cnfpassword">Confirm Password</label>
+                </div>
                 <br>   
                 <button type="submit" class="btn btn-success" 
-                    style="background-color: #015668;" @click='login'>Login</button> 
+                    style="background-color: #015668;" @click='register'>Register</button> 
                 <br><br>
-                <a href="/register">New User? Register!</a>
+                <router-link to="/">Existing User? Login!</router-link>
             </div>    
         </div>
     </div>
@@ -48,18 +54,16 @@ export default {
     data() {
         return {
             cred: {
+                name: null,
                 email: null,
                 password: null,
             },
-            error: null
+            error: null,
+            success: null
         }
     },
-    components:{
-        Libdashboard,
-        Userdashboard,
-    },
     methods: {
-        async login() {
+        async register() {
             const res = await fetch('/user_login', {
                 method: 'POST',
                 headers: {
@@ -68,9 +72,10 @@ export default {
                 body: JSON.stringify(this.cred),
             })
             const data = await res.json()
-            console.log(data)
             if (res.ok) {
                 localStorage.setItem('auth-token', data.token)
+                localStorage.setItem('role', data.role)
+                localStorage.setItem('email',data.email)
                 if (data.role=='admin') this.$router.push({path : '/libdashboard'})
                 else if (data.role=='user') this.$router.push({path : '/userdashboard'})
             }

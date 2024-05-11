@@ -30,10 +30,10 @@ class Book(db.Model):
     name=db.Column(db.String,unique=True)
     content=db.Column(db.String)
     author=db.Column(db.String)
-    #section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
+    section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
     is_issued = db.Column(db.Boolean, default = False)    
     create_date=db.Column(db.DateTime)
-    #section = db.relationship('Section')
+    section = db.relationship('Section')
 
 class Section(db.Model):
     id=db.Column(db.Integer,primary_key=True)
