@@ -38,7 +38,7 @@ export default {
                 <br/><br/>
                 <router-link :to="{ path: '/sections', query: { do: 'all' } }">Browse Sections</router-link>
                 <br/><br/>
-                <router-link :to="{ path: '/books', query: { do: 'all' } }">Browse Books</router-link>
+                <router-link to="/books">Browse Books</router-link>
                 <br/><br/>
                 <router-link :to="{ path: '/books', query: { do: 'request' } }">Request Books</router-link>
                 <br/><br/>

@@ -1,9 +1,10 @@
 from flask import current_app as app,jsonify,request,render_template
-from flask_security import auth_required, roles_required, current_user
+from flask_security import auth_required, roles_required
 from flask_restful import marshal,fields
-from .models import Request,db,Book,Issue,Purchase,Rating
+from .models import Request,db,Book,Section,Issue,Purchase,Rating
 from .datastore import datastore
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime
 
 @app.get('/')
 def home():
@@ -27,11 +28,68 @@ def user_login():
     else:
         return jsonify({"message":"Incorrect password"}),400
 
+@app.post('/register')
+def register():
+    data = request.get_json()
+    name=data.get('name')
+    email = data.get('email')
+    password = data.get("password")
+    if not name:
+        return jsonify({"message":"Name is required"}),400
+    if not email:
+        return jsonify({"message":"Email is required"}),400
+    if not password :
+        return jsonify({"message":"Password is required"}),400
+    user = datastore.find_user(email=email)
+    if user:
+        return jsonify({"message":"Email already exists"}),404
+    user = datastore.create_user(name=name,email=email,password=generate_password_hash(password),roles=['user'])
+    db.session.commit()
+    return jsonify({"message":"User registered successfully"})
+
+
+#===============================BOOK API===============================#
+
 book_fields = {
     "id": fields.Integer,
     "name": fields.String,
-    "author": fields.String
+    "author": fields.String,
+    "section": fields.String
 }
+
+#---------------------CREATE------------------#
+
+@app.post('/books/add')
+@auth_required("token")
+@roles_required("admin")
+def create_book():
+    data = request.get_json()
+    name=data.get('name')
+    author=data.get('author')
+    section=data.get('section')
+    content=data.get('content')
+    if not name:
+        return jsonify({"message":"Name is required"}),400
+    if not author:
+        return jsonify({"message":"Author is required"}),400
+    if not content :
+        return jsonify({"message":"Empty file/content"}),400
+    if section:
+        section_obj=Section.query.filter_by(name=section).first()
+        if not section_obj:
+            return jsonify({"message":"Invalid Section"}),400
+        section_id = section_obj.id
+    else:
+        section_id=None
+
+    book = Book.query.filter_by(name=name).first()
+    if book:
+        return jsonify({"message":"Book name already exists"}),404
+    book = Book(name=name,author=author,section_id=section_id,content=content,create_date=datetime.now())
+    db.session.add(book)
+    db.session.commit()
+    marshalled_data = marshal(book, book_fields)
+    return jsonify({**marshalled_data, **{"message":"Book created successfully"}})
 
 @app.get('/books')
 @auth_required("token")
@@ -62,4 +120,18 @@ def delete_book(id):
         db.session.delete(rating)
     db.session.commit()
     return jsonify({"message": "Book deleted successfully"})
+
+section_fields = {
+    "id": fields.Integer,
+    "name": fields.String,
+    "books": fields.List(fields.Nested(book_fields))
+}
+
+@app.get('/sections')
+@auth_required("token")
+def get_sections():
+    sections = Section.query.all()
+    if len(sections) == 0:
+        return jsonify({"message": "No sections available"}), 404
+    return marshal(sections, section_fields)
     

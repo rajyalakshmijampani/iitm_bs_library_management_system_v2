@@ -5,15 +5,15 @@ export default {
     <Navbar>
     <div class="col">
         <div class="row" style="margin : 2vh 0 2vh 0; width:30%; height: 7vh;align-items: center;">
-            <div :style="{ color: message_type === 'error' ? 'red' : 'green' }" v-if="message" style="padding-left: 0;">
-                {{ message }}
+            <div style="color:red;" v-if="error" style="padding-left: 0;">
+                {{ error }}
                 <button class="btn-close" style="float: inline-end;" @click="clearMessage"></button>
             </div>
         </div>
         <div class="row mb-3">
             <div class="heading" style="width: 70%; align-items: center; display: flex;justify-content: space-between">
                 <h4 style="color: #015668;margin-left: 0">{{no_of_books}} book(s) available.</h4>
-                <router-link to="/books/add" tag="button" class="button-link" 
+                <router-link to="/books/add" tag="button" class="button-link" v-if="role=='admin'"
                             style="background-color: #015668; color: white; border-radius: 9px;  padding: 8px 10px;">
                     <i class="fas fa-plus"></i>
                     Add Book
@@ -35,7 +35,7 @@ export default {
                     <tr v-for="(book,index) in allBooks" :key="index">
                         <td style="vertical-align: middle;">{{book.id}}</td>
                         <td style="vertical-align: middle;">{{book.name}}</td>
-                        <td style="vertical-align: middle;">Section</td>
+                        <td style="vertical-align: middle;">{{book.section}}</td>
                         <td v-if="role=='admin'" style="vertical-align: middle;">
                             <router-link to="/books/download" tag="button" class="button-link" 
                                 style="background-color: white; color: #015668; border: 2px solid #015668; border-radius: 9px;  padding: 6px 12px; vertical-align: middle;">
@@ -62,8 +62,7 @@ export default {
             token: localStorage.getItem("auth-token"),
             role: localStorage.getItem("role"),
             no_of_books: 0,
-            message: null,
-            message_type: null
+            error: null
         }
     },
     components: {
@@ -74,8 +73,7 @@ export default {
       },
     methods: {
         clearMessage() {
-            this.message = null
-            this.message_type = null
+            this.error = null
         },
         async deleteBook(id){
             const res = await fetch(`/books/delete/${id}`, {
@@ -96,7 +94,7 @@ export default {
                     }
                 })
             if (res.ok) {
-                const data = await res.json().catch((e) => {})
+                const data = await res.json()
                 this.allBooks = data
                 this.no_of_books = Object.keys(data).length
                 }

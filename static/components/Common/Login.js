@@ -48,8 +48,8 @@ export default {
                 email: null,
                 password: null,
             },
-            error: null,
-            success: null
+            error: this.$route.params.error,
+            success: this.$route.params.success
         }
     },
     components:{

@@ -33,12 +33,13 @@ class Book(db.Model):
     section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
     is_issued = db.Column(db.Boolean, default = False)    
     create_date=db.Column(db.DateTime)
-    section = db.relationship('Section')
+    section = db.relationship("Section", back_populates="books")    
 
 class Section(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String,unique=True)
     description=db.Column(db.String(255))
+    books = db.relationship("Book", back_populates="section")
 
 class Issue(db.Model):
     id=db.Column(db.Integer,primary_key=True)

@@ -15,9 +15,6 @@ export default {
                 <div style="margin: auto; color: red;">
                     {{ error }}
                 </div>
-                <div style="margin: auto; color: red;">
-                    {{ success }}
-                </div>
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
                     <input type="text" class="form-control" name="name" placeholder="Name" 
@@ -32,18 +29,18 @@ export default {
                 </div>
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
-                    <input type="password" class="form-control" name="password" 
-                        placeholder="Password" v-model='cred.password' required>
+                    <input type="password" class="form-control" name="password" placeholder="Password" 
+                        v-model='cred.password' @input="checkPasswordsMatch" required>
                     <label for="password">Password</label>
                 </div>
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
-                    <input type="password" class="form-control" name="cnfpassword" 
-                        placeholder="Confirm Password" required>
+                    <input type="password" class="form-control" name="cnfpassword" placeholder="Confirm Password" 
+                        v-model='cnfpassword' @input="checkPasswordsMatch" required>
                     <label for="cnfpassword">Confirm Password</label>
                 </div>
                 <br>   
-                <button type="submit" class="btn btn-success" 
+                <button type="submit" class="btn btn-success" :disabled="error === 'Passwords do not match'"
                     style="background-color: #015668;" @click='register'>Register</button> 
                 <br><br>
                 <router-link to="/">Existing User? Login!</router-link>
@@ -56,15 +53,21 @@ export default {
             cred: {
                 name: null,
                 email: null,
-                password: null,
+                password: null                
             },
-            error: null,
-            success: null
+            cnfpassword: null,
+            error: null
         }
     },
     methods: {
+        checkPasswordsMatch(){
+            if (this.cred.password === this.cnfpassword)
+                this.error = null
+            else
+                this.error = 'Passwords do not match'
+        },
         async register() {
-            const res = await fetch('/user_login', {
+            const res = await fetch('/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,11 +76,8 @@ export default {
             })
             const data = await res.json()
             if (res.ok) {
-                localStorage.setItem('auth-token', data.token)
-                localStorage.setItem('role', data.role)
-                localStorage.setItem('email',data.email)
-                if (data.role=='admin') this.$router.push({path : '/libdashboard'})
-                else if (data.role=='user') this.$router.push({path : '/userdashboard'})
+                alert(data.message)
+                this.$router.push('/user_login')
             }
             else{
                 this.error = data.message

@@ -11,6 +11,7 @@ export default {
                 </div>
             </div>
             <div> Welcome Lib </div>
+        </div>
     </Navbar>
     `,
     components:{
