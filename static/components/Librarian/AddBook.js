@@ -16,13 +16,13 @@ export default {
         <div class="row mb-3">
             <label for="name" class="col-sm-2 col-form-label">Name<sup style="color: red;"> * </sup></label>
             <div class="col-sm-4">
-                <input type="text" class="form-control" name="name" v-model='book.name' style="border:1px solid" required>
+                <input type="text" class="form-control" name="name" v-model='book.name' style="border:1px solid">
             </div>
         </div>
         <div class="row mb-3">
             <label for="author" class="col-sm-2 col-form-label">Author(s)<sup style="color: red;"> * </sup></label>
             <div class="col-sm-4">
-                <input type="text" class="form-control" name="author" v-model='book.author' style="border:1px solid" required>
+                <input type="text" class="form-control" name="author" v-model='book.author' style="border:1px solid">
             </div>
         </div>
         <div class="row mb-3">
@@ -36,14 +36,25 @@ export default {
                 </div>            
             </div>
         </div>
+        <div class="row mb-3">
+            <label for="name" class="col-sm-2 col-form-label">Price<sup style="color: red;"> * </sup></label>
+            <div class="col-sm-2">
+                <input type="number" class="form-control" name="price" v-model='book.price' style="border:1px solid">
+            </div>
+        </div>
         <br>
         <div>
-            <input type="file" accept=".txt" @change='readContent' required>
+            <input type="file" accept=".txt" @change='readContent' required><br>
+                <sub class="text-muted">Allowed file type: .txt</sub>
         </div>
         <div class="form-group" style="margin-top: 2%;">
             <label class="col-md-4 control-label" for="submit"></label>
             <div class="col-md-8">
-                <button class="btn btn-success" style="margin-right: 1%; background-color: #015668" @click='createBook'>Create</button>
+                <button class="btn btn-success" style="margin-right: 1%; background-color: #015668" 
+                        :disabled="book.name === null || book.name === '' ||
+                                    book.author === null || book.author === '' ||
+                                    book.price===null || book.price === '' || book.content=== null" 
+                        @click='createBook'>Create</button>
                 <button class="btn btn-default" style="margin-left: 1%; border-color: #015668" @click='goBack'>Cancel</button>
             </div>
         </div>
@@ -55,10 +66,12 @@ export default {
                 name: null,
                 author: null,
                 section: '',
+                price: null,
                 content: null
             },
             token: localStorage.getItem("auth-token"),
             allSections: null,
+            isRequired: true,
             error: null
         }
     },
@@ -77,20 +90,28 @@ export default {
         },
         readContent(event) {
             const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (reader.result)
-                    this.book.content = reader.result
-                else
-                    this.error = 'File is empty'
-                };
-            reader.readAsText(file);
+            if (file.type != "text/plain"){
+                this.book.content = null
+                this.error= 'Unsupported file type'
+            }
+            else{
+                this.error = null
+                const reader = new FileReader();
+                reader.onload = () => {
+                    if (reader.result)
+                        this.book.content = reader.result
+                    else
+                        this.error = 'File is empty'
+                    };
+                reader.readAsText(file);
+            }
         },
         async createBook(){
             const res = await fetch('/books/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authentication-Token': this.token
                 },
                 body: JSON.stringify(this.book),
             })

@@ -30,10 +30,16 @@ class Book(db.Model):
     name=db.Column(db.String,unique=True)
     content=db.Column(db.String)
     author=db.Column(db.String)
+    price=db.Column(db.Integer)
     section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
     is_issued = db.Column(db.Boolean, default = False)    
     create_date=db.Column(db.DateTime)
-    section = db.relationship("Section", back_populates="books")    
+    section = db.relationship("Section", back_populates="books")   
+    ratings = db.relationship('Rating', backref='book', lazy='dynamic')
+
+    @property
+    def average_rating(self):
+        return self.ratings.with_entities(db.func.avg(Rating.rating)).scalar() 
 
 class Section(db.Model):
     id=db.Column(db.Integer,primary_key=True)
@@ -64,6 +70,12 @@ class Rating(db.Model):
     __table_args__ = (
         db.PrimaryKeyConstraint('user_id', 'book_id'),
     )
+
+@db.event.listens_for(Rating, 'after_insert')
+def update_average_rating(mapper, connection, target):
+    book = target.book
+    if book:
+        book.average_rating = book.average_rating
 
 class Request(db.Model):
     user_id=db.Column(db.String,db.ForeignKey('user.id'))

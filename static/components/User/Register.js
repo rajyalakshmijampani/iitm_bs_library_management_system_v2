@@ -40,8 +40,11 @@ export default {
                     <label for="cnfpassword">Confirm Password</label>
                 </div>
                 <br>   
-                <button type="submit" class="btn btn-success" :disabled="error === 'Passwords do not match'"
-                    style="background-color: #015668;" @click='register'>Register</button> 
+                <button type="submit" class="btn btn-success" style="background-color: #015668;" 
+                        :disabled="cred.name === null || cred.name === '' ||
+                                    cred.email === null || cred.email === '' || 
+                                    cred.password === null || cred.password === '' || cred.password !== cnfpassword"
+                        @click='register'>Register</button> 
                 <br><br>
                 <router-link to="/">Existing User? Login!</router-link>
             </div>    

@@ -1,10 +1,11 @@
-from flask import current_app as app,jsonify,request,render_template
+from flask import current_app as app,jsonify,request,render_template,Response
 from flask_security import auth_required, roles_required
 from flask_restful import marshal,fields
 from .models import Request,db,Book,Section,Issue,Purchase,Rating
 from .datastore import datastore
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
+from io import BytesIO
 
 @app.get('/')
 def home():
@@ -54,8 +55,13 @@ book_fields = {
     "id": fields.Integer,
     "name": fields.String,
     "author": fields.String,
-    "section": fields.String
-}
+    "price": fields.Integer,
+    "section": fields.Nested({
+        'id': fields.Integer,
+        'name': fields.String
+        }),
+    "average_rating": fields.Float
+    }
 
 #---------------------CREATE------------------#
 
@@ -67,6 +73,7 @@ def create_book():
     name=data.get('name')
     author=data.get('author')
     section=data.get('section')
+    price=data.get('price')
     content=data.get('content')
     if not name:
         return jsonify({"message":"Name is required"}),400
@@ -74,6 +81,13 @@ def create_book():
         return jsonify({"message":"Author is required"}),400
     if not content :
         return jsonify({"message":"Empty file/content"}),400
+    if not price:
+        return jsonify({"message":"Price is required"}),400
+    else:
+        try:
+            price=int(price)
+        except:
+            return jsonify({"message":"Invalid value for price"}),400
     if section:
         section_obj=Section.query.filter_by(name=section).first()
         if not section_obj:
@@ -85,11 +99,13 @@ def create_book():
     book = Book.query.filter_by(name=name).first()
     if book:
         return jsonify({"message":"Book name already exists"}),404
-    book = Book(name=name,author=author,section_id=section_id,content=content,create_date=datetime.now())
+    book = Book(name=name,author=author,price=price,section_id=section_id,content=content,create_date=datetime.now())
     db.session.add(book)
     db.session.commit()
     marshalled_data = marshal(book, book_fields)
     return jsonify({**marshalled_data, **{"message":"Book created successfully"}})
+
+#---------------------READ------------------#
 
 @app.get('/books')
 @auth_required("token")
@@ -98,6 +114,19 @@ def get_books():
     if len(books) == 0:
         return jsonify({"message": "No books available"}), 404
     return marshal(books, book_fields)
+
+
+@app.get('/books/download/<int:id>')
+@auth_required("token")
+@roles_required("admin")
+def download_book(id):
+    book = Book.query.get(id)
+    if not book:
+        return jsonify({"message": "Book not found"}), 404
+    else:
+        return jsonify({"content":book.content})
+
+#---------------------DELETE------------------#
 
 @app.get('/books/delete/<int:id>')
 @auth_required("token")

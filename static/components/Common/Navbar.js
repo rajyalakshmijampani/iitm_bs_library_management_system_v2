@@ -3,7 +3,7 @@ export default {
     <div>
     <!-- Top nav bar -->
     <nav class="navbar bg-body-tertiary">
-        <div class="container-fluid">
+        <div class="container-fluid" style="margin-right:5%">
             <!-- Top left logo -->
             <a class="navbar-brand" href="/">
                 <img src="http://localhost:5000/static/images/logo.png" alt="ClickReads" width="350" height="60">
@@ -21,7 +21,7 @@ export default {
             </div>
             <li class="nav-item dropdown" style="list-style-type: none;">
                     <a class="nav-link dropdown-toggle" href="/" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                        Welcome
+                        My Account
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                         <li><a class="dropdown-item " @click='profile'>Edit Profile</a></li>

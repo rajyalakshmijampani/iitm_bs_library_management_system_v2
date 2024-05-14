@@ -18,9 +18,6 @@ export default {
                 <div style="margin: auto; color: red;">
                     {{ error }}
                 </div>
-                <div style="margin: auto; color: red;">
-                    {{ success }}
-                </div>
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
                     <input type="email" class="form-control" name="email" placeholder="Email address" 
@@ -34,8 +31,9 @@ export default {
                     <label for="password">Password</label>
                 </div>
                 <br>   
-                <button type="submit" class="btn btn-success" 
-                    style="background-color: #015668;" @click='login'>Login</button> 
+                <button class="btn btn-success" style="background-color: #015668;" 
+                    :disabled="cred.email === null || cred.email === '' || 
+                               cred.password === null || cred.password === ''" @click='login'>Login</button> 
                 <br><br>
                 <router-link to="/register">New User? Register!</router-link>
             </div>    
@@ -48,8 +46,7 @@ export default {
                 email: null,
                 password: null,
             },
-            error: this.$route.params.error,
-            success: this.$route.params.success
+            error: this.$route.params.error
         }
     },
     components:{
@@ -69,7 +66,6 @@ export default {
             if (res.ok) {
                 localStorage.setItem('auth-token', data.token)
                 localStorage.setItem('role', data.role)
-                localStorage.setItem('email',data.email)
                 if (data.role=='admin') this.$router.push({path : '/libdashboard'})
                 else if (data.role=='user') this.$router.push({path : '/userdashboard'})
             }
