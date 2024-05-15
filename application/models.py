@@ -13,7 +13,7 @@ class User(db.Model,UserMixin):
     active = db.Column(db.Boolean)
     fs_uniquifier = db.Column(db.String(255),unique=True,nullable=False)
     roles = db.relationship('Role',secondary='roles_users',
-                            backref = db.backref('user',lazy='dynamic'))
+                            backref = db.backref('users',lazy='dynamic'))
 
 class Role(db.Model,RoleMixin):
     id = db.Column(db.Integer(),primary_key=True)

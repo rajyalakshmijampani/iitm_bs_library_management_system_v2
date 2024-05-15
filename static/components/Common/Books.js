@@ -32,7 +32,9 @@ export default {
                             <p class="card-text" style="margin-top:2vh"><b>{{book.name}}</b></p>
                             <div style="display: flex;justify-content: space-between;align-items:center;">
                                 <p v-if="book.average_rating !== null" style="margin-bottom:0;"> Avg. Rating: {{ book.average_rating }}</p>
+
                                 <p v-else style="margin-bottom:0;">No ratings yet</p>
+
                                 <b-button class="btn-outline-danger" style="background-color:white; color:crimson;" 
                                     v-if="role=='admin'" @click='confirmDelete(book.id,book.name)'>
                                     <i class="fa-regular fa-trash-can"></i> Delete
@@ -48,8 +50,8 @@ export default {
     data() {
         return {
             allBooks: null,
-            token: localStorage.getItem("auth-token"),
-            role: localStorage.getItem("role"),
+            token: JSON.parse(localStorage.getItem('user')).token,
+            role: JSON.parse(localStorage.getItem('user')).role,
             no_of_books: 0,
             error: null
         }
@@ -98,7 +100,7 @@ export default {
             const data = await res.json()
             if (res.ok) {
                 alert(data.message)
-                window.location.reload();
+                this.$router.go(0)  // Refresh page
             }
         },
         async loadBooks() {

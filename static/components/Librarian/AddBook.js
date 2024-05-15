@@ -44,7 +44,7 @@ export default {
         </div>
         <br>
         <div>
-            <input type="file" accept=".txt" @change='readContent' required><br>
+            <input type="file" accept=".txt" @change='readContent'><br>
                 <sub class="text-muted">Allowed file type: .txt</sub>
         </div>
         <div class="form-group" style="margin-top: 2%;">
@@ -69,9 +69,8 @@ export default {
                 price: null,
                 content: null
             },
-            token: localStorage.getItem("auth-token"),
+            token: JSON.parse(localStorage.getItem('user')).token,
             allSections: null,
-            isRequired: true,
             error: null
         }
     },

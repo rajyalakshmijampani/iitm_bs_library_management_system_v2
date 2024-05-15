@@ -3,54 +3,88 @@ import Navbar from "/static/components/Common/Navbar.js"
 export default {
     template: `
     <Navbar>
-    <div class="col">
+    <div class="col" style="width:60%">
         <div class="row" style="margin : 2vh 0 2vh 0; width:30%; height: 7vh;align-items: center;">
-            <div style="padding-left: 0; color:red;" v-if="error">
+            <div style="padding-left: 0; color: red;" v-if="error">
                 {{ error }}
                 <button class="btn-close" style="float: inline-end;" @click="clearMessage"></button>
             </div>
         </div>
         <div class="row mb-3">
-            <div class="heading" style="width: 70%; align-items: center; display: flex;justify-content: space-between">
-                <h4 style="color: #015668;margin-left: 0">{{no_of_books}} book(s) available.</h4>
-                <router-link to="/books/add" tag="button" class="button-link" v-if="role=='admin'"
-                            style="background-color: #015668; color: white; border-radius: 9px;  padding: 8px 10px;">
-                    <i class="fas fa-plus"></i>
-                    Add Book
-                </router-link>
+            <h2 style="color: #015668">Book Details</h2>
+        </div>
+        </br>
+        <div class="row mb-3">
+            <label for="name" class="col-sm-3 col-form-label">Name<sup style="color: red;"> * </sup></label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" name="name" :disabled="role!='admin'" 
+                        v-model='book.name' style="border:1px solid">
             </div>
         </div>
-        <div class="row" style="margin-top:8vh;">
-            <b-container>
-                <b-row>
-                    <b-col v-for="(book,index) in allBooks" :key="index" cols="3" class="mb-3">
-                        <b-card style="width:85%;border:1px solid #015668">
-                            <router-link :to="{ path: '/books/open', query: { id: book.id } }">
-                                <b-card-img src="http://localhost:5000/static/images/image.png" alt="Image" 
-                                            img-top style="width:75%;margin-left:12%"></b-card-img>
-                            </router-link></br>
-                            <p class="card-text" style="margin-top:2vh"><b>{{book.name}}</b></p>
-                            <div style="display: flex;justify-content: space-between;align-items:center;">
-                                <p v-if="book.average_rating !== null" style="margin-bottom:0;"> Avg. Rating: {{ book.average_rating }}</p>
-                                <p v-else style="margin-bottom:0;">No ratings yet</p>
-                                <b-button class="btn-outline-danger" style="background-color:white; color:crimson;" 
-                                    v-if="role=='admin'" @click='confirmDelete(book.id,book.name)'>
-                                    <i class="fa-regular fa-trash-can"></i> Delete
-                                </b-button>
-                            </div>
-                        </b-card>
-                    </b-col>
-                </b-row>
-            </b-container>
+        <div class="row mb-3">
+            <label for="author" class="col-sm-3 col-form-label">Author(s)<sup style="color: red;"> * </sup></label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" name="author" :disabled="role!='admin'" 
+                        v-model='book.author' style="border:1px solid">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="section" class="col-sm-3 col-form-label">Section</label>
+            <div class="col-sm-4">
+                <div class="dropdown">
+                    <select class="form-select" v-model="book.section" :disabled="role!='admin'" 
+                            style="border:1px solid">
+                        <option value=null>--Select--</option>
+                        <option v-for="(section, index) in allSections" :key="index" :value="section.name">{{section.name}}</option>
+                    </select>
+                </div>            
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="name" class="col-sm-3 col-form-label">Price<sup style="color: red;"> * </sup></label>
+            <div class="col-sm-3">
+                <input type="number" class="form-control" name="price" :disabled="role!='admin'"
+                         v-model='book.price' style="border:1px solid">
+            </div>
+        </div>
+        <br>
+        <div v-if="role=='admin'">
+            <input type="file" accept=".txt" @change='readContent'><br>
+                <sub class="text-muted">Allowed file type: .txt</sub><br>
+                <sub>Leave blank to retain the existing file. Upload new file to replace</sub>
+        </div>
+        <div class="form-group" style="margin-top: 2%;">
+            <label class="col-md-4 control-label" for="submit"></label>
+            <div class="col-md-8">
+                <button class="btn btn-success" v-if="role=='admin'" style="margin-right: 2%; background-color: #015668" 
+                        :disabled="book.name === null || book.name === '' ||
+                                    book.author === null || book.author === '' ||
+                                    book.price===null || book.price === '' || error !==null " 
+                        @click='updateBook'>Update</button>
+                <button class="btn btn-default" style="border-color: #015668" @click='goBack'>Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div class="col" style="width:40%">
+        <div class="row" style="margin : 2vh 0 2vh 0; height: 7vh;"></div>
+        <div class="row mb-3">
+            <h2 style="color: #015668">Actions</h2>
         </div>
     </div>
     </Navbar>`,
     data() {
         return {
-            allBooks: null,
-            token: localStorage.getItem("auth-token"),
-            role: localStorage.getItem("role"),
-            no_of_books: 0,
+            book: {
+                name: null,
+                author: null,
+                section: null,
+                price: null,
+                content: null
+            },
+            id: this.$route.query.id,
+            token: JSON.parse(localStorage.getItem('user')).token,
+            role: JSON.parse(localStorage.getItem('user')).role,
+            allSections: null,
             error: null
         }
     },
@@ -58,60 +92,85 @@ export default {
         Navbar,
     },
     created() {
-        this.loadBooks();
-      },
+        this.loadSections();
+        this.loadBookData();
+        if(this.role=='user')
+            this.loadUserBookData();
+    },
     methods: {
         clearMessage() {
             this.error = null
         },
-        async downloadBook(id,name){
-            const res = await fetch(`/books/download/${id}`, {
-                headers: {
-                  'Authentication-Token': this.token,
-                },
-              })
-            if (res.ok) {
-                const data = await res.json()
-                const contentBytes = new TextEncoder().encode(data.content);
-                const blob = new Blob([contentBytes], { type: 'text/plain' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', name+'.txt'); // Set the filename
-                document.body.appendChild(link);
-                link.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(link);
-            }
+        goBack(){
+            this.$router.push('/books')
         },
-        confirmDelete(book_id,book_name){
-            var result = confirm("Are you sure you want to delete the book '" + book_name + "' ?");
-            if (result)
-                this.deleteBook(book_id)
+        readContent(event) {
+            const file = event.target.files[0];
+            if (file){
+                if (file.type != "text/plain"){
+                    this.book.content = null
+                    this.error= 'Unsupported file type'
+                }
+                else{
+                    this.error = null
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        if (reader.result)
+                            this.book.content = reader.result
+                        else
+                            this.error = 'File is empty'
+                            this.book.content = null
+                        };
+                    reader.readAsText(file);
+                }
+            }            
         },
-        async deleteBook(id){
-            const res = await fetch(`/books/delete/${id}`, {
-                headers: {
-                  'Authentication-Token': this.token,
-                },
-              })
-            const data = await res.json()
-            if (res.ok) {
-                alert(data.message)
-                window.location.reload();
-            }
+        async updateBook(){
+            // const res = await fetch('/books/add', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //         'Authentication-Token': this.token
+            //     },
+            //     body: JSON.stringify(this.book),
+            // })
+            // const data = await res.json()
+            // if (res.ok) {
+            //     alert(data.message)
+            //     this.$router.push('/books')
+            // }
+            // else{
+            //     this.error = data.message
+            // }
         },
-        async loadBooks() {
-            const res = await fetch('/books', {
+        async loadSections() {
+            const res = await fetch('/sections', {
                 headers: {
                     "Authentication-Token": this.token
                     }
                 })
             if (res.ok) {
                 const data = await res.json()
-                this.allBooks = data
-                this.no_of_books = Object.keys(data).length
+                this.allSections = data
                 }
         },
+        async loadBookData(){
+            const res = await fetch(`/books/${this.id}`, {
+                method: 'GET',
+                headers: {
+                    'Authentication-Token': this.token
+                },
+            })
+            if (res.ok) {
+                const data = await res.json()
+                this.book.name = data.name
+                this.book.author = data.author
+                this.book.section = data.section.name
+                this.book.price = data.price
+            }
+        },
+        async loadUserBookData(){
+            
+        }
     }
 }

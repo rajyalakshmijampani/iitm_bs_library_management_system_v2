@@ -64,8 +64,7 @@ export default {
             })
             const data = await res.json()
             if (res.ok) {
-                localStorage.setItem('auth-token', data.token)
-                localStorage.setItem('role', data.role)
+                localStorage.setItem('user', JSON.stringify(data))
                 if (data.role=='admin') this.$router.push({path : '/libdashboard'})
                 else if (data.role=='user') this.$router.push({path : '/userdashboard'})
             }

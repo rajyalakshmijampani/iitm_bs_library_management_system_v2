@@ -1,15 +1,22 @@
 from flask import current_app as app,jsonify,request,render_template,Response
 from flask_security import auth_required, roles_required
 from flask_restful import marshal,fields
-from .models import Request,db,Book,Section,Issue,Purchase,Rating
+from .models import Request,db,User,Book,Section,Issue,Purchase,Rating
 from .datastore import datastore
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
 from io import BytesIO
 
+
 @app.get('/')
 def home():
     return render_template("index.html")
+
+user_fields = {
+    "id": fields.Integer,
+    "email": fields.String,
+    "name": fields.String
+    }
 
 @app.post('/user_login')
 def user_login():
@@ -24,8 +31,8 @@ def user_login():
     if not user:
         return jsonify({"message":"User not found"}),404
     if check_password_hash(user.password,password):
-        return jsonify({"email":user.email,"role":user.roles[0].name,
-                        "token":user.get_auth_token()})
+        marshalled_data = marshal(user, user_fields)
+        return jsonify({**marshalled_data, **{"role":user.roles[0].name,"token":user.get_auth_token()}})
     else:
         return jsonify({"message":"Incorrect password"}),400
 
@@ -47,6 +54,26 @@ def register():
     user = datastore.create_user(name=name,email=email,password=generate_password_hash(password),roles=['user'])
     db.session.commit()
     return jsonify({"message":"User registered successfully"})
+
+@app.post('/updateProfile/<int:id>')
+def update_profile(id):
+    data = request.get_json()
+    name=data.get('name')
+    email = data.get('email')
+    if not name:
+        return jsonify({"message":"Name is required"}),400
+    if not email:
+        return jsonify({"message":"Email is required"}),400
+    other_user = User.query.filter(User.name == name, User.id != id).first()
+    if other_user:
+        return jsonify({"message":"Email already exists"}),404
+    user = datastore.find_user(id=id)
+    if not user:
+        return jsonify({"message":"User does not exist"}),400
+    user.name = name
+    user.email = email
+    db.session.commit()
+    return jsonify({"message":"Profile Updated successfully"})
 
 
 #===============================BOOK API===============================#
@@ -111,14 +138,20 @@ def create_book():
 @auth_required("token")
 def get_books():
     books = Book.query.all()
-    if len(books) == 0:
+    if not books:
         return jsonify({"message": "No books available"}), 404
     return marshal(books, book_fields)
 
+@app.get('/books/<int:id>')
+@auth_required("token")
+def get_book_by_id(id):
+    book = Book.query.get(id)
+    if not book:
+        return jsonify({"message": "Book not found"}), 404
+    return marshal(book, book_fields)
 
 @app.get('/books/download/<int:id>')
 @auth_required("token")
-@roles_required("admin")
 def download_book(id):
     book = Book.query.get(id)
     if not book:

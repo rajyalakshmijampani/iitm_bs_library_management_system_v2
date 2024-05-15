@@ -80,7 +80,7 @@ export default {
             const data = await res.json()
             if (res.ok) {
                 alert(data.message)
-                this.$router.push('/user_login')
+                this.$router.push('/')
             }
             else{
                 this.error = data.message

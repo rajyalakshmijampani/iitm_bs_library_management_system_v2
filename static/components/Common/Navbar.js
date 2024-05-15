@@ -21,7 +21,7 @@ export default {
             </div>
             <li class="nav-item dropdown" style="list-style-type: none;">
                     <a class="nav-link dropdown-toggle" href="/" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                        My Account
+                        Welcome, {{name}}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                         <li><a class="dropdown-item " @click='profile'>Edit Profile</a></li>
@@ -66,7 +66,8 @@ export default {
     `,
     data() {
         return {
-            role: localStorage.getItem('role'),
+            role: JSON.parse(localStorage.getItem('user')).role,
+            name: JSON.parse(localStorage.getItem('user')).name,
             message: null,
             message_type: null
         }
