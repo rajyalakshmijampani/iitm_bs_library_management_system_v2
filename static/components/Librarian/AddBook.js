@@ -85,7 +85,7 @@ export default {
             this.error = null
         },
         goBack(){
-            this.$router.push('/books')
+            this.$router.back()
         },
         readContent(event) {
             const file = event.target.files[0];

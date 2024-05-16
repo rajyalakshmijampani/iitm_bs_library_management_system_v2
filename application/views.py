@@ -1,11 +1,12 @@
 from flask import current_app as app,jsonify,request,render_template,Response
-from flask_security import auth_required, roles_required
+from flask_security import auth_required, roles_required,current_user
 from flask_restful import marshal,fields
 from .models import Request,db,User,Book,Section,Issue,Purchase,Rating
 from .datastore import datastore
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
 from io import BytesIO
+from sqlalchemy import and_
 
 
 @app.get('/')
@@ -56,6 +57,7 @@ def register():
     return jsonify({"message":"User registered successfully"})
 
 @app.post('/updateProfile/<int:id>')
+@auth_required("token")
 def update_profile(id):
     data = request.get_json()
     name=data.get('name')
@@ -64,7 +66,7 @@ def update_profile(id):
         return jsonify({"message":"Name is required"}),400
     if not email:
         return jsonify({"message":"Email is required"}),400
-    other_user = User.query.filter(User.name == name, User.id != id).first()
+    other_user = User.query.filter(and_(User.email == email, User.id != id)).first()
     if other_user:
         return jsonify({"message":"Email already exists"}),404
     user = datastore.find_user(id=id)
@@ -74,6 +76,24 @@ def update_profile(id):
     user.email = email
     db.session.commit()
     return jsonify({"message":"Profile Updated successfully"})
+
+@app.post('/changePwd/<int:id>')
+@auth_required("token")
+def change_password(id):
+    data = request.get_json()
+    oldpwd=data.get('oldpwd')
+    newpwd = data.get('newpwd')
+    if not oldpwd:
+        return jsonify({"message":"Old Password is required"}),400
+    if not newpwd:
+        return jsonify({"message":"New Password is required"}),400
+    user = datastore.find_user(id=id)
+    if check_password_hash(user.password,oldpwd):
+        user.password = generate_password_hash(newpwd)
+        db.session.commit()
+        return jsonify({"message":"Password updated successfully"})
+    else:
+        return jsonify({"message":"Incorrect old password"}),400
 
 
 #===============================BOOK API===============================#
@@ -158,6 +178,33 @@ def download_book(id):
         return jsonify({"message": "Book not found"}), 404
     else:
         return jsonify({"content":book.content})
+    
+#---------------------UPDATE------------------#
+
+@app.post('/books/rate/<int:id>')
+@auth_required("token")
+@roles_required("user")
+def rate_book(id):
+    data = request.get_json()
+    rating=data.get('rating')
+    if not rating:
+        return jsonify({"message": "Rating is required"}), 400
+    try:
+        rating=int(rating)
+    except:
+        return jsonify({"message": "Invalid rating format. Choose a number between 1 and 5"}), 400
+    if (rating<1 or rating>5):
+        return jsonify({"message": "Choose a rating between 1 and 5"}), 400
+    user_id = current_user.id
+    prev_rating_record = Rating.query.filter_by(user_id=user_id,book_id=id).first()
+    if prev_rating_record:
+        prev_rating_record.rating = rating
+    else:
+        rating = Rating(user_id=user_id,book_id=id,rating=rating)
+        db.session.add(rating)
+    db.session.commit()
+    return jsonify({'message': 'Rating submitted successfully'})
+
 
 #---------------------DELETE------------------#
 

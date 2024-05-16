@@ -18,25 +18,25 @@ export default {
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
                     <input type="text" class="form-control" name="name" placeholder="Name" 
-                            v-model='cred.name' autofocus required>
+                            v-model='cred.name' autofocus>
                     <label for="name">Name</label>
                 </div>
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
                     <input type="email" class="form-control" name="email" placeholder="Email address" 
-                            v-model='cred.email' autofocus required>
+                            v-model='cred.email' autofocus>
                     <label for="email">Email address</label>
                 </div>
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
                     <input type="password" class="form-control" name="password" placeholder="Password" 
-                        v-model='cred.password' @input="checkPasswordsMatch" required>
+                        v-model='cred.password' @input="checkPasswordsMatch">
                     <label for="password">Password</label>
                 </div>
                 <br>
                 <div class="form-floating" style="width: 75%;margin: auto">
                     <input type="password" class="form-control" name="cnfpassword" placeholder="Confirm Password" 
-                        v-model='cnfpassword' @input="checkPasswordsMatch" required>
+                        v-model='cnfpassword' @input="checkPasswordsMatch">
                     <label for="cnfpassword">Confirm Password</label>
                 </div>
                 <br>   
