@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin
 from sqlalchemy.sql import func
-from pytz import timezone
 
 db = SQLAlchemy()
 
@@ -53,6 +52,9 @@ class Issue(db.Model):
     book_id=db.Column(db.Integer,db.ForeignKey('book.id'))    
     issue_date=db.Column(db.DateTime)
     return_date=db.Column(db.DateTime)
+    is_active=db.Column(db.Boolean,default=True)
+    user = db.relationship('User', backref='issues', lazy=True)
+    book = db.relationship('Book', backref='issues', lazy=True)
 
 class Purchase(db.Model):
     user_id=db.Column(db.String,db.ForeignKey('user.id'))
@@ -78,11 +80,10 @@ def update_average_rating(mapper, connection, target):
         book.average_rating = book.average_rating
 
 class Request(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
     user_id=db.Column(db.String,db.ForeignKey('user.id'))
     book_id=db.Column(db.Integer,db.ForeignKey('book.id'))
-    status=db.Column(db.String,default='PENDING')  # APPROVED/PENDING/REJECTED
-
-    __table_args__ = (
-        db.PrimaryKeyConstraint('user_id', 'book_id'),
-    )
+    status=db.Column(db.String,default='PENDING')  # APPROVED/PENDING/REJECTED/CANCELLED
+    user = db.relationship('User', backref='requests', lazy=True)
+    book = db.relationship('Book', backref='requests', lazy=True)
 

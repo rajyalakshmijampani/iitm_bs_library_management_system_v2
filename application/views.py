@@ -4,7 +4,7 @@ from flask_restful import marshal,fields
 from .models import Request,db,User,Book,Section,Issue,Purchase,Rating
 from .datastore import datastore
 from werkzeug.security import check_password_hash, generate_password_hash
-from datetime import datetime
+from datetime import datetime,timedelta
 from io import BytesIO
 from sqlalchemy import and_
 
@@ -98,6 +98,16 @@ def change_password(id):
 
 #===============================BOOK API===============================#
 
+class IssuedTo(fields.Raw):
+    def format(self, id):
+        issue = Issue.query.filter_by(book_id=id,is_active=True).first()
+        return {'id':issue.user.id,'name':issue.user.name} if issue else None
+
+class RequestedBy(fields.Raw):
+    def format(self, id):
+        request = Request.query.filter_by(book_id=id,status='PENDING').first()
+        return {'id':request.user.id,'name':request.user.name} if request else None
+    
 book_fields = {
     "id": fields.Integer,
     "name": fields.String,
@@ -107,7 +117,10 @@ book_fields = {
         'id': fields.Integer,
         'name': fields.String
         }),
-    "average_rating": fields.Float
+    "content": fields.String,
+    "average_rating": fields.Float,
+    "issued_to" : IssuedTo(attribute='id'),
+    "requested_by" : RequestedBy(attribute='id')
     }
 
 #---------------------CREATE------------------#
@@ -170,6 +183,8 @@ def get_book_by_id(id):
         return jsonify({"message": "Book not found"}), 404
     return marshal(book, book_fields)
 
+
+
 @app.get('/books/download/<int:id>')
 @auth_required("token")
 def download_book(id):
@@ -181,29 +196,7 @@ def download_book(id):
     
 #---------------------UPDATE------------------#
 
-@app.post('/books/rate/<int:id>')
-@auth_required("token")
-@roles_required("user")
-def rate_book(id):
-    data = request.get_json()
-    rating=data.get('rating')
-    if not rating:
-        return jsonify({"message": "Rating is required"}), 400
-    try:
-        rating=int(rating)
-    except:
-        return jsonify({"message": "Invalid rating format. Choose a number between 1 and 5"}), 400
-    if (rating<1 or rating>5):
-        return jsonify({"message": "Choose a rating between 1 and 5"}), 400
-    user_id = current_user.id
-    prev_rating_record = Rating.query.filter_by(user_id=user_id,book_id=id).first()
-    if prev_rating_record:
-        prev_rating_record.rating = rating
-    else:
-        rating = Rating(user_id=user_id,book_id=id,rating=rating)
-        db.session.add(rating)
-    db.session.commit()
-    return jsonify({'message': 'Rating submitted successfully'})
+
 
 
 #---------------------DELETE------------------#
@@ -243,4 +236,107 @@ def get_sections():
     if len(sections) == 0:
         return jsonify({"message": "No sections available"}), 404
     return marshal(sections, section_fields)
+
+#---------------------------------------USER RELATED--------------------------#
+
+@app.get('/userbook/<int:id>')
+@auth_required("token")
+@roles_required("user")
+def get_userbook_by_id(id):
+    user_id = current_user.id
+    user_purchased = True if (Purchase.query.filter_by(user_id = user_id,book_id =id).first()) else False
+
+    rating_record = Rating.query.filter_by(user_id = user_id,book_id =id).first()
+    user_rating = rating_record.rating if rating_record else 0
+
+    request = Request.query.filter_by(user_id = user_id,book_id =id).first()
+    user_request_status=request.status if request else None
+
+    return jsonify({"user_purchased": user_purchased,"user_rating":user_rating,"user_request_status":user_request_status})
+
+
+@app.post('/book/rate/<int:id>')
+@auth_required("token")
+@roles_required("user")
+def rate_book(id):
+    data = request.get_json()
+    rating=data.get('rating')
+    if not rating:
+        return jsonify({"message": "Rating is required"}), 400
+    try:
+        rating=int(rating)
+    except:
+        return jsonify({"message": "Invalid rating format. Choose a number between 1 and 5"}), 400
+    if (rating<1 or rating>5):
+        return jsonify({"message": "Choose a rating between 1 and 5"}), 400
+    user_id = current_user.id
+    prev_rating_record = Rating.query.filter_by(user_id=user_id,book_id=id).first()
+    if prev_rating_record:
+        prev_rating_record.rating = rating
+    else:
+        rating = Rating(user_id=user_id,book_id=id,rating=rating)
+        db.session.add(rating)
+    db.session.commit()
+    return jsonify({'message': 'Rating submitted successfully'})
+
+@app.post('/book/request/<int:id>')
+@auth_required("token")
+@roles_required("user")
+def request_book(id):
+    user_id = current_user.id
+    is_issued = Issue.query.filter_by(book_id=id,is_active=True).first()
+    if (is_issued):
+        return jsonify({"message": "Book already issued to a user. Cannot be requested."}), 400
+    is_requested = Request.query.filter_by(book_id=id,status='PENDING').first()
+    if (is_requested):
+        return jsonify({"message": "Book already requested by a user. Cannot place a new request."}), 400
     
+    request = Request(book_id=id,user_id=user_id)
+    db.session.add(request)
+    db.session.commit()
+    return jsonify({'message': 'Book requested successfully'})
+
+@app.post('/book/cancel/<int:id>')
+@auth_required("token")
+@roles_required("user")
+def cancel_book_request(id):
+    user_id = current_user.id
+    requested = Request.query.filter_by(book_id=id,user_id=user_id,status='PENDING').first()
+    if not requested:
+        return jsonify({"message": "No pending request for the book by the user"}), 400
+    
+    requested.status='CANCELLED'
+    db.session.commit()
+    return jsonify({'message': 'Request cancelled successfully'})
+
+#---------------------------------------ADMIN RELATED--------------------------#
+
+@app.post('/book/approve/<int:id>')
+@auth_required("token")
+@roles_required("admin")
+def approve_book(id):
+    request = Request.query.filter_by(book_id=id,status='PENDING').first()
+    if not request:
+        return jsonify({"message": "No pending requests for this book"}), 400
+    else:
+        request.status='APPROVED'
+        issue = Issue(book_id=id,
+                      user_id=request.user_id,
+                      issue_date=datetime.now(),
+                      return_date=datetime.now()+timedelta(days=app.config['MAX_DAYS_OF_ISSUE']),
+                      is_active=True)
+        db.session.add(issue)
+        db.session.commit()
+        return jsonify({'message': 'Request approved successfully'})
+
+@app.post('/book/reject/<int:id>')
+@auth_required("token")
+@roles_required("admin")
+def reject_book(id):
+    request = Request.query.filter_by(book_id=id,status='PENDING').first()
+    if not request:
+        return jsonify({"message": "No pending requests for this book"}), 400
+    else:
+        request.status='REJECTED'
+        db.session.commit()
+        return jsonify({'message': 'Request rejected successfully'})
