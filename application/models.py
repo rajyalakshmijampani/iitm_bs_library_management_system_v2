@@ -24,6 +24,11 @@ class RolesUsers(db.Model):
     user_id = db.Column('user_id',db.Integer(),db.ForeignKey('user.id'))
     role_id = db.Column('role_id',db.Integer(),db.ForeignKey('role.id'))
 
+book_section = db.Table('book_section',
+    db.Column('book_id', db.Integer, db.ForeignKey('book.id'), primary_key=True),
+    db.Column('section_id', db.Integer, db.ForeignKey('section.id'), primary_key=True)
+)
+
 class Book(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String,unique=True)
@@ -33,7 +38,7 @@ class Book(db.Model):
     section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
     is_issued = db.Column(db.Boolean, default = False)    
     create_date=db.Column(db.DateTime)
-    section = db.relationship("Section", back_populates="books")   
+    sections = db.relationship('Section', secondary=book_section, backref='books')  
     ratings = db.relationship('Rating', backref='book', lazy='dynamic')
 
     @property
@@ -44,7 +49,6 @@ class Section(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String,unique=True)
     description=db.Column(db.String(255))
-    books = db.relationship("Book", back_populates="section")
 
 class Issue(db.Model):
     id=db.Column(db.Integer,primary_key=True)

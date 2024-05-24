@@ -26,14 +26,16 @@ export default {
             </div>
         </div>
         <div class="row mb-3">
-            <label for="section" class="col-sm-2 col-form-label">Section</label>
-            <div class="col-sm-3">
-                <div class="dropdown">
-                    <select class="form-select" v-model="book.section" style="border:1px solid">
-                        <option value="">--Select--</option>
-                        <option v-for="(section, index) in allSections" :key="index" :value="section.name">{{section.name}}</option>
-                    </select>
-                </div>            
+            <label for="section" class="col-sm-2 col-form-label" style="display:flex;align-items:center">Section(s)</label>
+            <div class="col-sm-3" style="max-height: 200px;overflow-y: auto;margin-left: 12px;border: 1px solid black;border-radius: 10px;">
+                <b-form-checkbox v-model="allSelected" aria-describedby="flavours" aria-controls="flavours" @change="toggleAll">
+                    <span style="margin-left: 10px;"> {{ allSelected ? 'Un-select All' : 'Select All' }}</span>
+                </b-form-checkbox>
+                <b-form-checkbox-group v-model="book.sections">
+                        <b-form-checkbox v-for="section in allSections" :key="section.id" :value="section.id">
+                            <span style="margin-left: 10px;">{{ section.name }}</span>
+                        </b-form-checkbox>
+                </b-form-checkbox-group>
             </div>
         </div>
         <div class="row mb-3">
@@ -65,13 +67,14 @@ export default {
             book: {
                 name: null,
                 author: null,
-                section: '',
+                sections: [],
                 price: null,
                 content: null
             },
             token: JSON.parse(localStorage.getItem('user')).token,
             allSections: null,
-            error: null
+            error: null,
+            allSelected: false
         }
     },
     components: {
@@ -81,6 +84,9 @@ export default {
         this.loadSections();
     },
     methods: {
+        toggleAll(checked) {
+            this.book.sections = checked ? Object.values(this.allSections).map(section => section.id) : []
+        },
         clearMessage() {
             this.error = null
         },
@@ -106,7 +112,7 @@ export default {
             }
         },
         async createBook(){
-            const res = await fetch('/books/add', {
+            const res = await fetch('/book/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -134,5 +140,19 @@ export default {
                 this.allSections = data
                 }
         },
-    }
+    },
+    watch: {
+        'book.sections': {
+            handler(newValue) {
+                // Handle changes in individual section checkboxes
+                if (newValue.length === 0) {
+                    this.allSelected = false
+                } else if (newValue.length === this.allSections.length) {
+                    this.allSelected = true
+                } else {
+                    this.allSelected = false
+                }
+            }
+        }
+      }
 }

@@ -31,19 +31,20 @@ export default {
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label for="section" class="col-sm-3 col-form-label">Section</label>
-                    <div class="col-sm-4">
-                        <div class="dropdown">
-                            <select class="form-select" v-model="book.section" :disabled="role!='admin'" 
-                                    style="border:1px solid">
-                                <option value=null>--Select--</option>
-                                <option v-for="(section, index) in allSections" :key="index" :value="section.name">{{section.name}}</option>
-                            </select>
-                        </div>            
+                    <label for="section" class="col-sm-3 col-form-label" style="display:flex;align-items:center">Section(s)</label>
+                    <div class="col-sm-6" style="max-height: 200px;overflow-y: auto;margin-left: 12px;border: 1px solid black;border-radius: 10px;" >
+                        <b-form-checkbox v-model="allSelected" aria-describedby="flavours" aria-controls="flavours" @change="toggleAll" :disabled="role!='admin'">
+                            <span style="margin-left: 10px;"> {{ allSelected ? 'Un-select All' : 'Select All' }}</span>
+                        </b-form-checkbox>
+                        <b-form-checkbox-group v-model="book.sections">
+                                <b-form-checkbox v-for="section in allSections" :key="section.id" :value="section.id" :disabled="role!='admin'">
+                                    <span style="margin-left: 10px;">{{ section.name }}</span>
+                                </b-form-checkbox>
+                        </b-form-checkbox-group>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label for="name" class="col-sm-3 col-form-label">Price<sup style="color: red;"> * </sup></label>
+                    <label for="name" class="col-sm-3 col-form-label">Price (INR)<sup style="color: red;"> * </sup></label>
                     <div class="col-sm-3">
                         <input type="number" class="form-control" name="price" :disabled="role!='admin'"
                                 v-model='book.price' style="border:1px solid">
@@ -68,7 +69,7 @@ export default {
                 </div>
             </div>
             <div class="col" style="width:80%">
-                <div class="row" style="display: flex; width: 50%;margin-top:12%;">
+                <div class="row" style="display: flex; width: 50%;margin-top:12%;" v-if="role=='user'">
                     <p style="display: flex; width: 40%; align-items: center; margin-bottom:0;padding-left:0">Rating:</p>
                     <select class="form-select" v-model="book.user_rating" style="width: 20%; margin-right: 2%;">
                         <option value=0 >--</option>
@@ -78,6 +79,7 @@ export default {
                             :disabled="book.user_rating == 0" @click='submitRating'>Submit</button>
                 </div>
                 </br>
+                <div style="height:11%" v-if="role=='admin'"></div>
                 <div class="row mb-3" style="display: flex; width: 80%;align-items:center">
                     <p style="width: 25%;padding-left:0">Issue Status: </p>
                     <div style="width: 75%;" v-if="book.issued_to==null && book.requested_by==null">
@@ -127,6 +129,13 @@ export default {
                     <button class="btn btn-outline-danger" v-if="book.issued_to!=null && role=='admin'"
                             style="width:50%" @click='revokeBook'>Revoke e-book</button>
 
+                    <div v-if="role=='user'" style="display:flex;padding-left:0;margin-top:10%"> 
+                        <button class="btn btn-success" style="background-color: #015668; width:50%;margin-right:5%"
+                                v-if="book.user_purchased==false" @click='purchaseBook'>Purchase e-book</button>
+                        <button class="btn btn-success" style="background-color: #015668; width:50%;margin-right:5%"
+                                v-else-if="book.user_purchased==true" @click='downloadBook'>Download e-book</button>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -137,7 +146,7 @@ export default {
             book: {
                 name: null,
                 author: null,
-                section: null,
+                sections: [],
                 price: null,
                 content: null,
                 issued_to: null,
@@ -151,7 +160,8 @@ export default {
             role: JSON.parse(localStorage.getItem('user')).role,
             userid: JSON.parse(localStorage.getItem('user')).id,
             allSections: null,
-            error: null
+            error: null,
+            allSelected: false
         }
     },
     components: {
@@ -164,6 +174,9 @@ export default {
             this.loadUserBookData();
     },
     methods: {
+        toggleAll(checked) {
+            this.book.sections = checked ? Object.values(this.allSections).map(section => section.id) : []
+        },
         clearMessage() {
             this.error = null
         },
@@ -192,22 +205,30 @@ export default {
             }
         },
         async updateBook() {
-            // const res = await fetch('/books/add', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //         'Authentication-Token': this.token
-            //     },
-            //     body: JSON.stringify(this.book),
-            // })
-            // const data = await res.json()
-            // if (res.ok) {
-            //     alert(data.message)
-            //     this.$router.push('/books')
-            // }
-            // else{
-            //     this.error = data.message
-            // }
+            const book_details={
+                id: this.id,
+                name: this.book.name,
+                author: this.book.author,
+                sections: this.book.sections,
+                price: this.book.price,
+                content: this.book.content,
+            }
+            const res = await fetch('/book/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': this.token
+                },
+                body: JSON.stringify(book_details),
+            })
+            const data = await res.json()
+            if (res.ok) {
+                alert(data.message)
+                this.$router.go(0)
+            }
+            else{
+                this.error = data.message
+            }
         },
         async loadSections() {
             const res = await fetch('/sections', {
@@ -233,7 +254,7 @@ export default {
                 const data = await res.json()
                 this.book.name = data.name
                 this.book.author = data.author
-                this.book.section = data.section.name
+                this.book.sections = Object.values(data.sections).map(section => section.id)
                 this.book.price = data.price
                 this.book.content = data.content
                 this.book.issued_to = data.issued_to
@@ -256,13 +277,17 @@ export default {
             }
         },
         async submitRating() {
-            const res = await fetch(`/book/rate/${this.id}`, {
+            const res = await fetch('/user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authentication-Token': this.token
                 },
-                body: JSON.stringify({ "rating": this.book.user_rating })
+                body: JSON.stringify({
+                    'action' : 'RATE',
+                    'book_id' : this.id,
+                    'rating' :  this.book.user_rating
+                })
             })
             const data = await res.json()
             if (res.ok) {
@@ -274,12 +299,17 @@ export default {
             }
         },
         async requestBook() {
-            const res = await fetch(`/book/request/${this.id}`, {
+            const res = await fetch('/user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authentication-Token': this.token
-                }
+                },
+                body: JSON.stringify({
+                    'action' : 'REQUEST',
+                    'book_id' : this.id
+                })
+
             })
             const data = await res.json()
             if (res.ok) {
@@ -290,16 +320,19 @@ export default {
                 this.error = data.message
             }
         },
-        async issueBook(){},
         async cancelRequest(){
             var result = confirm("Are you sure you want to cancel your request?");
             if (result){
-                const res = await fetch(`/book/cancel/${this.id}`, {
+                const res = await fetch('/user', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authentication-Token': this.token
-                    }
+                    },
+                    body: JSON.stringify({
+                        'action' : 'CANCEL',
+                        'book_id' : this.id
+                    })
                 })
                 const data = await res.json()
                 if (res.ok) {
@@ -311,13 +344,42 @@ export default {
                 }
             }
         },
+        async returnBook(){
+            var result = confirm("Are you sure you want to return this book?");
+            if (result){
+                const res = await fetch('/user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': this.token
+                    },
+                    body: JSON.stringify({
+                        'action' : 'RETURN',
+                        'book_id' : this.id
+                    })
+                })
+                const data = await res.json()
+                if (res.ok) {
+                    alert(data.message)
+                    this.$router.go(0)
+                }
+                else {
+                    this.error = data.message
+                }
+            }
+        },
+        
         async approveRequest(){
-            const res = await fetch(`/book/approve/${this.id}`, {
+            const res = await fetch('/admin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authentication-Token': this.token
-                }
+                },
+                body: JSON.stringify({
+                    'action' : 'APPROVE',
+                    'book_id' : this.id
+                })
             })
             const data = await res.json()
             if (res.ok) {
@@ -331,12 +393,16 @@ export default {
         async rejectRequest(){
             var result = confirm("Are you sure you want to reject this request?");
             if (result){
-                const res = await fetch(`/book/reject/${this.id}`, {
+                const res = await fetch('/admin', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authentication-Token': this.token
-                    }
+                    },
+                    body: JSON.stringify({
+                        'action' : 'REJECT',
+                        'book_id' : this.id
+                    })
                 })
                 const data = await res.json()
                 if (res.ok) {
@@ -348,14 +414,96 @@ export default {
                 }
             }
         },
-        async returnBook(){},
-        async revokeBook(){},
+        async issueBook(){},
+        async revokeBook(){
+            var result = confirm("Are you sure you want to revoke this book?");
+            if (result){
+                const res = await fetch('/admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': this.token
+                    },
+                    body: JSON.stringify({
+                        'action' : 'REVOKE',
+                        'book_id' : this.id
+                    })
+                })
+                const data = await res.json()
+                if (res.ok) {
+                    alert(data.message)
+                    this.$router.go(0)
+                }
+                else {
+                    this.error = data.message
+                }
+            }
+        },
         readBook(content) {
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const newTab = window.open();
             newTab.document.body.innerHTML = '<pre>' + content + '</pre>';
             URL.revokeObjectURL(url);
+        },
+        async purchaseBook(){
+            var result = confirm(`Are you sure you want to pay Rs.${this.book.price}/- and purchase this book?`);
+            if (result){
+                const res = await fetch('/user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': this.token
+                    },
+                    body: JSON.stringify({
+                        'action' : 'PURCHASE',
+                        'book_id' : this.id
+                    })
+                })
+                const data = await res.json()
+                if (res.ok) {
+                    alert(data.message)
+                    this.$router.go(0)
+                }
+                else {
+                    this.error = data.message
+                }
+            }
+        },
+        downloadBook(){
+            const contentBytes = new TextEncoder().encode(this.book.content);
+            const blob = new Blob([contentBytes], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', this.book.name+'.txt'); // Set the filename
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+        },
+    },
+    watch: {
+        'book.sections': {
+            handler(newValue) {
+                // Handle changes in individual section checkboxes
+                if (newValue.length === 0) {
+                    this.allSelected = false
+                } else if (newValue.length === this.allSections.length) {
+                    this.allSelected = true
+                } else {
+                    this.allSelected = false
+                }
+            }
+        },
+        allSections(newValue) {
+           if (this.book.sections.length === 0) {
+                this.allSelected = false
+            } else if (this.book.sections.length === newValue.length) {
+                this.allSelected = true
+            } else {
+                this.allSelected = false
+            }
         }
-    }
+      }
 }
