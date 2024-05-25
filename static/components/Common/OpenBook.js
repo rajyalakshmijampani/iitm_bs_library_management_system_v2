@@ -129,11 +129,11 @@ export default {
                     <button class="btn btn-outline-danger" v-if="book.issued_to!=null && role=='admin'"
                             style="width:50%" @click='revokeBook'>Revoke e-book</button>
 
-                    <div v-if="role=='user'" style="display:flex;padding-left:0;margin-top:10%"> 
+                    <div style="display:flex;padding-left:0;margin-top:10%"> 
                         <button class="btn btn-success" style="background-color: #015668; width:50%;margin-right:5%"
-                                v-if="book.user_purchased==false" @click='purchaseBook'>Purchase e-book</button>
+                                v-if="book.user_purchased==false && role=='user'" @click='purchaseBook'>Purchase e-book</button>
                         <button class="btn btn-success" style="background-color: #015668; width:50%;margin-right:5%"
-                                v-else-if="book.user_purchased==true" @click='downloadBook'>Download e-book</button>
+                                v-else-if="book.user_purchased==true || role=='admin'" @click='downloadBook'>Download e-book</button>
                     </div>
 
                 </div>
@@ -159,7 +159,7 @@ export default {
             token: JSON.parse(localStorage.getItem('user')).token,
             role: JSON.parse(localStorage.getItem('user')).role,
             userid: JSON.parse(localStorage.getItem('user')).id,
-            allSections: null,
+            allSections: [],
             error: null,
             allSelected: false
         }
@@ -231,7 +231,7 @@ export default {
             }
         },
         async loadSections() {
-            const res = await fetch('/sections', {
+            const res = await fetch('/section/all', {
                 headers: {
                     'Content-Type': 'application/json',
                     "Authentication-Token": this.token
@@ -243,7 +243,7 @@ export default {
             }
         },
         async loadBookData() {
-            const res = await fetch(`/books/${this.id}`, {
+            const res = await fetch(`/book/${this.id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

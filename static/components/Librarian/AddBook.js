@@ -130,7 +130,7 @@ export default {
             }
         },
         async loadSections() {
-            const res = await fetch('/sections', {
+            const res = await fetch('/section/all', {
                 headers: {
                     "Authentication-Token": this.token
                     }

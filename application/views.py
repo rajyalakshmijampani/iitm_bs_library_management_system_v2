@@ -22,6 +22,9 @@ user_fields = {
 @app.post('/user_login')
 def user_login():
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body required"}),400
+
     email = data.get('email')
     password = data.get("password")
     if not email:
@@ -40,6 +43,9 @@ def user_login():
 @app.post('/register')
 def register():
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body required"}),400
+
     name=data.get('name')
     email = data.get('email')
     password = data.get("password")
@@ -60,6 +66,9 @@ def register():
 @auth_required("token")
 def update_profile(id):
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body required"}),400
+
     name=data.get('name')
     email = data.get('email')
     if not name:
@@ -81,6 +90,9 @@ def update_profile(id):
 @auth_required("token")
 def change_password(id):
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body required"}),400
+
     oldpwd=data.get('oldpwd')
     newpwd = data.get('newpwd')
     if not oldpwd:
@@ -171,7 +183,7 @@ def create_book():
 
 #---------------------READ------------------#
 
-@app.get('/books')
+@app.get('/book/all')
 @auth_required("token")
 def get_books():
     books = Book.query.all()
@@ -179,7 +191,7 @@ def get_books():
         return jsonify({"message": "No books available"}), 404
     return marshal(books, book_fields)
 
-@app.get('/books/<int:id>')
+@app.get('/book/<int:id>')
 @auth_required("token")
 def get_book_by_id(id):
     book = Book.query.get(id)
@@ -188,8 +200,7 @@ def get_book_by_id(id):
     return marshal(book, book_fields)
 
 
-
-@app.get('/books/download/<int:id>')
+@app.get('/book/download/<int:id>')
 @auth_required("token")
 def download_book(id):
     book = Book.query.get(id)
@@ -248,7 +259,7 @@ def update_book():
 
 #---------------------DELETE------------------#
 
-@app.get('/books/delete/<int:id>')
+@app.get('/book/delete/<int:id>')
 @auth_required("token")
 @roles_required("admin")
 def delete_book(id):
@@ -270,13 +281,17 @@ def delete_book(id):
     db.session.commit()
     return jsonify({"message": "Book deleted successfully"})
 
+
+#===============================SECTION API===============================#
+
 section_fields = {
     "id": fields.Integer,
     "name": fields.String,
+    "description": fields.String,
     "books": fields.List(fields.Nested(book_fields))
 }
 
-@app.get('/sections')
+@app.get('/section/all')
 @auth_required("token")
 def get_sections():
     sections = Section.query.all()

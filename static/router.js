@@ -7,6 +7,7 @@ import AddBook from './components/Librarian/AddBook.js'
 import OpenBook from './components/Common/OpenBook.js'
 import Profile from './components/Common/Profile.js'
 import ChangePwd from './components/Common/ChangePwd.js'
+import BrowseSections from './components/Common/BrowseSections.js'
 
 const routes = [
     { path: '/', component: Login, name: 'Login' },
@@ -17,6 +18,7 @@ const routes = [
     { path: '/books', component: BrowseBooks },
     { path: '/books/add', component: AddBook },
     { path: '/books/open', component: OpenBook },
+    { path: '/sections', component: BrowseSections },
     { path: '/changepwd', component: ChangePwd}
 ]
 

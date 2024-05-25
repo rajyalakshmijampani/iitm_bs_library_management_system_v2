@@ -21,12 +21,12 @@ export default {
                 </router-link>
             </div>
         </div>
-        <div class="row" style="margin-top:8vh;">
+        <div class="row" style="margin-top:3vh;">
             <b-container>
                 <b-row>
                     <b-col v-for="(book,index) in allBooks" :key="index" cols="3" class="mb-3">
                         <Book :book="book"/>
-                        </b-col>
+                    </b-col>
                 </b-row>
             </b-container>
         </div>
@@ -34,7 +34,7 @@ export default {
     </Navbar>`,
     data() {
         return {
-            allBooks: null,
+            allBooks: [],
             token: JSON.parse(localStorage.getItem('user')).token,
             role: JSON.parse(localStorage.getItem('user')).role,
             no_of_books: 0,
@@ -53,7 +53,7 @@ export default {
             this.error = null
         },
         async downloadBook(id,name){
-            const res = await fetch(`/books/download/${id}`, {
+            const res = await fetch(`/book/download/${id}`, {
                 headers: {
                   'Authentication-Token': this.token,
                 },
@@ -73,7 +73,7 @@ export default {
             }
         },
         async loadBooks() {
-            const res = await fetch('/books', {
+            const res = await fetch('/book/all', {
                 headers: {
                     "Authentication-Token": this.token
                     }

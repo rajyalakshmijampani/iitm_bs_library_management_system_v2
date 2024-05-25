@@ -5,7 +5,7 @@ export default {
             <b-card-img src="http://localhost:5000/static/images/image.png" alt="Image" 
                         img-top style="width:75%;margin-left:12%"></b-card-img>
         </router-link></br>
-        <p class="card-text" style="margin-top:2vh"><b>{{book.name}}</b></p>
+        <p class="card-text text-truncate" style="margin-top:2vh"><b>{{book.name}}</b></p>
         <div style="display: flex;justify-content: space-between;align-items:center;">
             <p v-if="book.average_rating !== null" style="margin-bottom:0;"> Avg. Rating: {{ book.average_rating }}</p>
 
@@ -32,7 +32,7 @@ export default {
                 this.deleteBook(book_id)
         },
         async deleteBook(id){
-            const res = await fetch(`/books/delete/${id}`, {
+            const res = await fetch(`/book/delete/${id}`, {
                 headers: {
                   'Authentication-Token': this.token,
                 },

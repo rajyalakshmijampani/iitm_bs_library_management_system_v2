@@ -36,7 +36,7 @@ export default {
                 <h5 style="color: #015668;margin-top: 60px;margin-bottom: 40px;">My library</h5>
                 <router-link to='/userdashboard'>Dashboard</router-link>
                 <br/><br/>
-                <router-link :to="{ path: '/sections', query: { do: 'all' } }">Browse Sections</router-link>
+                <router-link to="/sections">Browse Sections</router-link>
                 <br/><br/>
                 <router-link to="/books">Browse Books</router-link>
                 <br/><br/>
@@ -51,9 +51,9 @@ export default {
                 <h5 style="color: #015668;margin-top: 60px;margin-bottom: 40px;">My library</h5>
                 <router-link to='/libdashboard'>Dashboard</router-link>
                 <br/><br/>
-                <router-link :to="{ path: '/sections', query: { do: 'all' } }">Browse Sections</router-link>
+                <router-link to="/sections">Manage Sections</router-link>
                 <br/><br/>
-                <router-link to="/books">Browse Books</router-link>
+                <router-link to="/books">Manage Books</router-link>
                 <br/><br/>
                 <router-link :to="{ path: '/books', query: { do: 'issue' } }">Issue Books</router-link>
                 <br/><br/>
