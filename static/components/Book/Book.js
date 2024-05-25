@@ -16,9 +16,12 @@ export default {
                 <i class="fa-regular fa-trash-can"></i> Delete
             </b-button>
         </div>
+        <span class="position-absolute top-0 start-100 translate-middle badge" v-if="page=='section_page' && role=='admin'">
+            <button class="btn btn-danger btn-sm" style="border-radius: 50%; height: 5%"><i class="fa-solid fa-minus"></i></button>
+        </span>
     </b-card>
     `,
-    props: ['book'],
+    props: ['book','page'],
     data() {
       return {
         token: JSON.parse(localStorage.getItem('user')).token,

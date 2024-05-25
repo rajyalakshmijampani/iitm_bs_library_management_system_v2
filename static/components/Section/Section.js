@@ -1,4 +1,4 @@
-import Book from "./Book.js";
+import Book from "../Book/Book.js";
 
 export default {
     template: `
@@ -24,8 +24,12 @@ export default {
             <b-container>
               <b-row style="margin-top:3%">
                   <b-col v-for="(book,index) in section.books" :key="index" cols="3" class="mb-3">
-                      <Book :book="book"/>
+                      <Book :book="book" :page="location"/>
                   </b-col>
+                  <section style="display: flex; justify-content: center;align-items: center; height: 250px; border: 2px dashed #ccc; 
+                                  position: relative;  background-color: #f9f9f9; width: 20%">
+                      <p style="align-items:center; justify-content: center;"><i class="fas fa-plus"></i> </br> Tag more books</p>
+                  </section>
               </b-row>
             </b-container>
           </div>
@@ -41,7 +45,8 @@ export default {
         role: JSON.parse(localStorage.getItem('user')).role,
         isCollapsed: true,
         no_of_books: 0,
-        error: null
+        error: null,
+        location: 'section_page'
       }
     },
     created() {

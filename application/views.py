@@ -291,11 +291,41 @@ section_fields = {
     "books": fields.List(fields.Nested(book_fields))
 }
 
+#---------------------CREATE------------------#
+
+@app.post('/section/create')
+@auth_required("token")
+@roles_required("admin")
+def create_section():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"message": "Request body required"}),400
+
+    name=data.get('name')
+    description=data.get('description')
+    if not name:
+        return jsonify({"message":"Name is required"}),400
+    if not description:
+        return jsonify({"message":"Description is required"}),400
+    
+    section = Section.query.filter_by(name=name).first()
+    if section:
+        return jsonify({"message":"Section name already exists"}),404
+    section = Section(name=name,description=description)
+    
+    db.session.add(section)
+    db.session.commit()
+    marshalled_data = marshal(section, section_fields)
+    return jsonify({**marshalled_data, **{"message":"Section created successfully"}})
+
+#---------------------READ------------------#
+
 @app.get('/section/all')
 @auth_required("token")
 def get_sections():
     sections = Section.query.all()
-    if len(sections) == 0:
+    if not sections:
         return jsonify({"message": "No sections available"}), 404
     return marshal(sections, section_fields)
 
