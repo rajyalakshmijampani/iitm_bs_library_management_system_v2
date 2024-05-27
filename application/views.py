@@ -164,7 +164,7 @@ def create_book():
             price=int(price)
         except:
             return jsonify({"message":"Invalid value for price"}),400
-    if sections:
+    
         for sec in sections:
             section_obj=Section.query.get(sec)
             if not section_obj:
@@ -173,9 +173,17 @@ def create_book():
     book = Book.query.filter_by(name=name).first()
     if book:
         return jsonify({"message":"Book name already exists"}),404
+    
     book = Book(name=name,author=author,price=price,content=content,create_date=datetime.now())
-    for sec in sections:
-        book.sections.append(Section.query.get(sec))
+
+    if sections:
+        for sec in sections:
+            section_obj=Section.query.get(sec)
+            if section_obj:
+                book.sections.append(section_obj)
+            else:
+                return jsonify({"message":"Invalid value(s) in section list"}),400            
+            
     db.session.add(book)
     db.session.commit()
     marshalled_data = marshal(book, book_fields)
@@ -256,6 +264,38 @@ def update_book():
     marshalled_data = marshal(book, book_fields)
     return jsonify({**marshalled_data, **{"message":"Book updated successfully"}})
 
+@app.post('/book/untag')
+@auth_required("token")
+@roles_required("admin")
+def untag_book():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"message": "Request body required"}),400
+    
+    book_id = data.get('book_id')
+    section_id = data.get('section_id')
+
+    if not book_id:
+        return jsonify({"message":"Book ID required"}),400
+    if not section_id:
+        return jsonify({"message":"Section ID required"}),400
+    
+    book = Book.query.get(book_id)
+    section = Section.query.get(section_id)
+    
+    if not book:
+        return jsonify({"message":"Invalid Book ID"}),400
+    if not section:
+        return jsonify({"message":"Invalid Section ID"}),400
+    
+    if section in book.sections:
+        book.sections.remove(section)
+        db.session.commit()
+        return jsonify({"message":"Book untagged successfully"})
+    else:
+        return jsonify({"message":"Section not found in book's sections"}),400    
+    
 
 #---------------------DELETE------------------#
 

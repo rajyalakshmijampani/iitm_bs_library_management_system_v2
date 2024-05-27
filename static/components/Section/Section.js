@@ -24,11 +24,11 @@ export default {
             <b-container>
               <b-row style="margin-top:3%">
                   <b-col v-for="(book,index) in section.books" :key="index" cols="3" class="mb-3">
-                      <Book :book="book" :page="location"/>
+                      <Book :book="book" :page="location" :section="section"/>
                   </b-col>
-                  <section style="display: flex; justify-content: center;align-items: center; height: 250px; border: 2px dashed #ccc; 
-                                  position: relative;  background-color: #f9f9f9; width: 20%">
-                      <p style="align-items:center; justify-content: center;"><i class="fas fa-plus"></i> </br> Tag more books</p>
+                  <section style="height: 250px; border: 2px dashed #ccc; background-color: #f9f9f9; width: 20%; cursor: pointer;" @click="tagBooks()">
+                      <div style="width:100%; text-align: center; margin-top: 40%"><i class="fas fa-plus"></i></div>
+                      <div style="width:100%; text-align:center">Tag more books</div>
                   </section>
               </b-row>
             </b-container>
@@ -49,12 +49,11 @@ export default {
         location: 'section_page'
       }
     },
-    created() {
-      this.loadSectionBooks();
-    },
     methods: {
+        tagBooks(){
+          this.$router.push({ name: 'TagBooks', params: { section: this.section }})
+        },
         async toggleSection() {
-            // Simulate an async operation
             await new Promise(resolve => setTimeout(resolve, 500));
             
             this.isCollapsed = !this.isCollapsed;
@@ -77,17 +76,5 @@ export default {
                 this.$router.go(0)  // Refresh page
             }
         },
-        async loadSectionBooks() {
-          const res = await fetch(`/section/${this.section.id}`, {
-              headers: {
-                  "Authentication-Token": this.token
-                  }
-              })
-          if (res.ok) {
-              const data = await res.json()
-              this.sectionBooks = data
-              this.no_of_books = Object.keys(data).length
-              }
-      },
     },
   }

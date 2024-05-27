@@ -3,7 +3,7 @@ export default {
     <div>
     <!-- Top nav bar -->
     <nav class="navbar bg-body-tertiary">
-        <div class="container-fluid" style="margin-right:5%">
+        <div class="container-fluid">
             <!-- Top left logo -->
             <a class="navbar-brand" href="/">
                 <img src="http://localhost:5000/static/images/logo.png" alt="ClickReads" width="350" height="60">
@@ -31,8 +31,8 @@ export default {
                 </li>
         </div>
     </nav>
-    <div class="row" style="height: 100vh">
-            <div class="col-2" style="width: 15%; padding-right: 0px; margin-left: 10px;" v-if="role=='user'">
+    <div class="row" style="height: 100%">
+            <div class="col-2" style="width: 15%; padding-right: 0px;" v-if="role=='user'">
                 <h5 style="color: #015668;margin-top: 60px;margin-bottom: 40px;">My library</h5>
                 <router-link to='/userdashboard'>Dashboard</router-link>
                 <br/><br/>
@@ -47,18 +47,21 @@ export default {
                 <router-link :to="{ path: '/purchases'}">My Purchases</router-link>
                 <br/><br/>
             </div>
-            <div class="col-2" style="width: 15%; padding-right: 0px; margin-left: 10px;" v-if="role=='admin'">    
-                <h5 style="color: #015668;margin-top: 60px;margin-bottom: 40px;">My library</h5>
-                <router-link to='/libdashboard'>Dashboard</router-link>
-                <br/><br/>
-                <router-link to="/sections">Manage Sections</router-link>
-                <br/><br/>
-                <router-link to="/books">Manage Books</router-link>
-                <br/><br/>
-                <router-link :to="{ path: '/books', query: { do: 'issue' } }">Issue Books</router-link>
-                <br/><br/>
-                <router-link :to="{ path: '/books', query: { do: 'revoke' } }">Revoke Books</router-link>
-                <br/><br/>
+            <div class="col-2" style="width: 15%; padding-right: 0px;" v-if="role=='admin'">  
+                <div style="margin-left:5%">  
+                    <h5 style="color: #015668;margin-top: 60px;margin-bottom: 40px;">My library</h5>
+                    <router-link to='/libdashboard'>Dashboard</router-link>
+                    <br/><br/>
+                    <router-link to="/sections">Manage Sections</router-link>
+                    <br/><br/>
+                    <router-link to="/books">Manage Books</router-link>
+                    <br/><br/>
+                    <router-link :to="{ path: '/books', query: { do: 'issue' } }">Issue Books</router-link>
+                    <br/><br/>
+                    <router-link :to="{ path: '/books', query: { do: 'revoke' } }">Revoke Books</router-link>
+                    <br/><br/>
+
+                </div>
             </div>
             <slot></slot>
     </div>  

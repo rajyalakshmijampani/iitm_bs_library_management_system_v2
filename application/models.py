@@ -35,7 +35,6 @@ class Book(db.Model):
     content=db.Column(db.String)
     author=db.Column(db.String)
     price=db.Column(db.Integer)
-    section_id = db.Column(db.Integer, db.ForeignKey('section.id'))
     is_issued = db.Column(db.Boolean, default = False)    
     create_date=db.Column(db.DateTime)
     sections = db.relationship('Section', secondary=book_section, backref='books')  

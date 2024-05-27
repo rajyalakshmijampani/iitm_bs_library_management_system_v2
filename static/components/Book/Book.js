@@ -17,11 +17,12 @@ export default {
             </b-button>
         </div>
         <span class="position-absolute top-0 start-100 translate-middle badge" v-if="page=='section_page' && role=='admin'">
-            <button class="btn btn-danger btn-sm" style="border-radius: 50%; height: 5%"><i class="fa-solid fa-minus"></i></button>
+            <button class="btn btn-danger btn-sm" style="border-radius: 50%; height: 5%"
+                    @click='confirmUntag(book.id,book.name,section.id,section.name)'><i class="fa-solid fa-minus"></i></button>
         </span>
     </b-card>
     `,
-    props: ['book','page'],
+    props: ['book','page','section'],
     data() {
       return {
         token: JSON.parse(localStorage.getItem('user')).token,
@@ -33,6 +34,26 @@ export default {
             var result = confirm("Are you sure you want to delete the book '" + book_name + "' ?");
             if (result)
                 this.deleteBook(book_id)
+        },
+        confirmUntag(book_id,book_name,section_id,section_name){
+            var result = confirm("Are you sure you want to untag the book '" + book_name + "' from '"+section_name+"' ?");
+            if (result)
+                this.untagBook(book_id,section_id)
+        },
+        async untagBook(book_id,section_id){
+            const res = await fetch('/book/untag', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',  
+                  'Authentication-Token': this.token,
+                },
+                body: JSON.stringify({'book_id':book_id, 'section_id':section_id})
+              })
+            const data = await res.json()
+            if (res.ok) {
+                alert(data.message)
+                this.$router.go(0)  // Refresh page
+            }
         },
         async deleteBook(id){
             const res = await fetch(`/book/delete/${id}`, {
