@@ -26,7 +26,8 @@ export default {
                   <b-col v-for="(book,index) in section.books" :key="index" cols="3" class="mb-3">
                       <Book :book="book" :page="location" :section="section"/>
                   </b-col>
-                  <section style="height: 250px; border: 2px dashed #ccc; background-color: #f9f9f9; width: 20%; cursor: pointer;" @click="tagBooks()">
+                  <section style="height: 250px; border: 2px dashed #ccc; background-color: #f9f9f9; width: 20%; cursor: pointer;" 
+                            @click="tagBooks()" v-if="role=='admin'">
                       <div style="width:100%; text-align: center; margin-top: 40%"><i class="fas fa-plus"></i></div>
                       <div style="width:100%; text-align:center">Tag more books</div>
                   </section>

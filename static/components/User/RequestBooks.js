@@ -1,4 +1,5 @@
 import Navbar from "/static/components/Common/Navbar.js"
+import config from '/static/config.js';
 
 export default {
     template: `
@@ -11,7 +12,10 @@ export default {
             </div>
         </div>
         <div class="row mb-3">
-            <h2 style="color: #015668">Select books to tag to "{{section.name}}"</h2>
+            <h2 style="color: #015668">Select books to request</h2>
+        </div>
+        <div class="row mb-3">
+            <p>Max limit : {{ max_books_allowed }}, Current Holidings : {{}}</p>
         </div>
         <div class="row mb-3">
             <b-form-checkbox v-model="allSelected" aria-describedby="flavours" aria-controls="flavours" @change="toggleAll" style="font-size: 1.1rem;">
@@ -28,7 +32,7 @@ export default {
             <div class="col-md-8">
                 <button class="btn btn-success" style="margin-right: 1%; background-color: #015668" 
                         :disabled="selected_books.length==0" 
-                        @click='tagBooks'>Tag Selected</button>
+                        @click='tagBooks'>Request Selected</button>
                 <button class="btn btn-default" style="margin-left: 1%; border-color: #015668" @click='goBack'>Cancel</button>
             </div>
         </div>
@@ -37,13 +41,14 @@ export default {
     data() {
         return {
             token: JSON.parse(localStorage.getItem('user')).token,
-            all_books: [],
+            user_id: JSON.parse(localStorage.getItem('user')).id,
+            possible_books: [],
             error: null,
             selected_books: [],
-            allSelected: false
+            allSelected: false,
+            max_books_allowed: config.MAX_BOOKS_ALLOWED
         }
     },
-    props: ['section'],
     components: {
         Navbar,
     },
@@ -67,28 +72,9 @@ export default {
                     }
                 })
             if (res.ok) {
-                const data = await res.json()
-                this.all_books = data.filter(book => !book.sections.map(section => section.id).includes(this.section.id));
+                const all_books = await res.json()
                 }
         },
-        async tagBooks(){
-            const res = await fetch('/section/tagbooks', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authentication-Token': this.token
-                },
-                body: JSON.stringify({'section_id': this.section.id,'selected_books':this.selected_books}),
-            })
-            const data = await res.json()
-            if (res.ok) {
-                alert(data.message)
-                this.$router.push('/sections')
-            }
-            else{
-                this.error = data.message
-            }
-        }
     },
     watch: {
         selected_books(newValue) {

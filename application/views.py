@@ -359,6 +359,25 @@ def create_section():
     marshalled_data = marshal(section, section_fields)
     return jsonify({**marshalled_data, **{"message":"Section created successfully"}})
 
+#----------------------UPDATE-------------------#
+
+@app.post('/section/tagbooks')
+@auth_required("token")
+@roles_required("admin")
+def tagbooks():
+    data = request.get_json()
+    section_id = data.get('section_id')
+    selected_books = data.get('selected_books')
+
+    section = Section.query.get(section_id)
+    for book_id in selected_books:
+        book = Book.query.get(book_id)
+        book.sections.append(section)
+    
+    db.session.commit()
+    marshalled_data = marshal(section, section_fields)
+    return jsonify({**marshalled_data, **{"message":"Books tagged to the section successfully"}})
+
 #---------------------READ------------------#
 
 @app.get('/section/all')
@@ -385,6 +404,15 @@ def get_userbook_by_id(id):
     user_request_status=request_record.status if request_record else None
 
     return jsonify({"user_purchased": user_purchased,"user_rating":user_rating,"user_request_status":user_request_status})
+
+@app.get('/user/currentbooks')
+@auth_required("token")
+@roles_required("user")
+def get_user_currentbooks():
+    user_id=current_user.id
+    issues = Issue.query.filter_by(user_id=user_id,is_active=True).all()
+    requests = Request.query.filter_by(user_id=user_id,status='PENDING').all()
+    return jsonify({"issues" : issues,"requests" : requests})
 
 @app.post('/user')
 @auth_required("token")

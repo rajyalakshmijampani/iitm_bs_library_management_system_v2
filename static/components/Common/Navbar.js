@@ -31,21 +31,23 @@ export default {
                 </li>
         </div>
     </nav>
-    <div class="row" style="height: 100%">
+    <div class="row" style="height: 100%;width:100%">
             <div class="col-2" style="width: 15%; padding-right: 0px;" v-if="role=='user'">
-                <h5 style="color: #015668;margin-top: 60px;margin-bottom: 40px;">My library</h5>
-                <router-link to='/userdashboard'>Dashboard</router-link>
-                <br/><br/>
-                <router-link to="/sections">Browse Sections</router-link>
-                <br/><br/>
-                <router-link to="/books">Browse Books</router-link>
-                <br/><br/>
-                <router-link :to="{ path: '/books', query: { do: 'request' } }">Request Books</router-link>
-                <br/><br/>
-                <router-link :to="{ path: '/books', query: { do: 'return' } }">Return Books</router-link>
-                <br/><br/>
-                <router-link :to="{ path: '/purchases'}">My Purchases</router-link>
-                <br/><br/>
+                <div style="margin-left:5%"> 
+                    <h5 style="color: #015668;margin-top: 60px;margin-bottom: 40px;">My library</h5>
+                    <router-link to='/userdashboard'>Dashboard</router-link>
+                    <br/><br/>
+                    <router-link to="/sections">Browse Sections</router-link>
+                    <br/><br/>
+                    <router-link to="/books">Browse Books</router-link>
+                    <br/><br/>
+                    <router-link to="/books/request">Request Books</router-link>
+                    <br/><br/>
+                    <router-link :to="{ path: '/books', query: { do: 'return' } }">Return Books</router-link>
+                    <br/><br/>
+                    <router-link :to="{ path: '/purchases'}">My Purchases</router-link>
+                    <br/><br/>
+                </div>
             </div>
             <div class="col-2" style="width: 15%; padding-right: 0px;" v-if="role=='admin'">  
                 <div style="margin-left:5%">  

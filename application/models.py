@@ -56,8 +56,8 @@ class Issue(db.Model):
     issue_date=db.Column(db.DateTime)
     return_date=db.Column(db.DateTime)
     is_active=db.Column(db.Boolean,default=True)
-    user = db.relationship('User', backref='issues', lazy=True)
-    book = db.relationship('Book', backref='issues', lazy=True)
+    user = db.relationship('User', backref='issues')
+    book = db.relationship('Book', backref='issues')
 
 class Purchase(db.Model):
     user_id=db.Column(db.String,db.ForeignKey('user.id'))
@@ -87,6 +87,6 @@ class Request(db.Model):
     user_id=db.Column(db.String,db.ForeignKey('user.id'))
     book_id=db.Column(db.Integer,db.ForeignKey('book.id'))
     status=db.Column(db.String,default='PENDING')  # APPROVED/PENDING/REJECTED/CANCELLED
-    user = db.relationship('User', backref='requests', lazy=True)
-    book = db.relationship('Book', backref='requests', lazy=True)
+    user = db.relationship('User', backref='requests')
+    book = db.relationship('Book', backref='requests')
 
