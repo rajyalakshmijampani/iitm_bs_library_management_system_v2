@@ -129,6 +129,7 @@ book_fields = {
         'id': fields.Integer,
         'name': fields.String
         })),
+    "status": fields.String,
     "content": fields.String,
     "average_rating": fields.Float,
     "issued_to" : IssuedTo(attribute='id'),
@@ -412,7 +413,7 @@ def get_user_currentbooks():
     user_id=current_user.id
     issues = Issue.query.filter_by(user_id=user_id,is_active=True).all()
     requests = Request.query.filter_by(user_id=user_id,status='PENDING').all()
-    return jsonify({"issues" : issues,"requests" : requests})
+    return jsonify({"issues" : issues , "requests" : requests})
 
 @app.post('/user')
 @auth_required("token")
@@ -457,11 +458,13 @@ def user():
 
     elif action=='REQUEST':
         
-        is_issued = Issue.query.filter_by(book_id=book_id,is_active=True).first()
-        if (is_issued):
+        #is_issued = Issue.query.filter_by(book_id=book_id,is_active=True).first()
+        #if (is_issued):
+        if (book.status=="ISSUED"):
             return jsonify({"message": "Book already issued to a user. Cannot be requested"}), 400
-        is_requested = Request.query.filter_by(book_id=book_id,status='PENDING').first()
-        if (is_requested):
+        #is_requested = Request.query.filter_by(book_id=book_id,status='PENDING').first()
+        #if (is_requested):
+        if (book.status=="REQUESTED"):
             return jsonify({"message": "Book already requested by a user. Cannot place a new request"}), 400
         # Books count for user
         issued_books = Issue.query.filter_by(book_id=book_id,user_id=user_id,is_active=True).count()
@@ -472,6 +475,8 @@ def user():
         
         request_record = Request(book_id=book_id,user_id=user_id)
         db.session.add(request_record)
+        book.status='REQUESTED'
+
         db.session.commit()
         return jsonify({'message': 'Book requested successfully'})
 
@@ -482,6 +487,7 @@ def user():
             return jsonify({"message": "No pending request for the book by the user"}), 400
         
         requested.status='CANCELLED'
+        book.status='AVAILABLE'
         db.session.commit()
         return jsonify({'message': 'Request cancelled successfully'})
     
@@ -492,7 +498,7 @@ def user():
         else:
             issue.is_active=False
             issue.return_date = datetime.now()
-            book.is_issued = False
+            book.status = 'AVAILABLE'
             db.session.commit()
             return jsonify({'message': 'Book returned successfully'})
     
@@ -543,7 +549,7 @@ def admin():
                         issue_date=datetime.now(),
                         is_active=True)
             db.session.add(issue)
-            book.is_issued = True
+            book.status = 'ISSUED'
             db.session.commit()
             return jsonify({'message': 'Request approved successfully'})
     
@@ -553,6 +559,7 @@ def admin():
             return jsonify({"message": "No pending requests for this book"}), 400
         else:
             request_record.status='REJECTED'
+            book.status='AVAILABLE'
             db.session.commit()
             return jsonify({'message': 'Request rejected successfully'})
     
@@ -583,7 +590,7 @@ def admin():
         else:
             issue.is_active=False
             issue.return_date = datetime.now()
-            book.is_issued = False
+            book.status = 'AVAILABLE'
             db.session.commit()
             return jsonify({'message': 'Book revoked successfully'})
 

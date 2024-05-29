@@ -18,7 +18,7 @@ export default {
                 <span style="margin-left: 10px;"> {{ allSelected ? 'Un-select All' : 'Select All' }}</span>
             </b-form-checkbox>
             <b-form-checkbox-group v-model="selected_books" style="margin-left:3%;margin-top:1%">
-                    <b-form-checkbox v-for="book in all_books" :key="book.id" :value="book.id" style="font-size: 1.1rem; margin-bottom:0.8%">
+                    <b-form-checkbox v-for="book in possible_books" :key="book.id" :value="book.id" style="font-size: 1.1rem; margin-bottom:0.8%">
                         <span style="margin-left: 10px;">{{ book.name }} ( {{ book.author }} )</span>
                     </b-form-checkbox>
             </b-form-checkbox-group>
@@ -37,7 +37,7 @@ export default {
     data() {
         return {
             token: JSON.parse(localStorage.getItem('user')).token,
-            all_books: [],
+            possible_books: [],
             error: null,
             selected_books: [],
             allSelected: false
@@ -68,7 +68,7 @@ export default {
                 })
             if (res.ok) {
                 const data = await res.json()
-                this.all_books = data.filter(book => !book.sections.map(section => section.id).includes(this.section.id));
+                this.possible_books = data.filter(book => !book.sections.map(section => section.id).includes(this.section.id));
                 }
         },
         async tagBooks(){

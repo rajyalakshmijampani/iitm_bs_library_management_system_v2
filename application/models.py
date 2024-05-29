@@ -35,7 +35,7 @@ class Book(db.Model):
     content=db.Column(db.String)
     author=db.Column(db.String)
     price=db.Column(db.Integer)
-    is_issued = db.Column(db.Boolean, default = False)    
+    status = db.Column(db.String, default = 'AVAILABLE')  # ISSUED,REQUESTED,AVAILABLE    
     create_date=db.Column(db.DateTime)
     sections = db.relationship('Section', secondary=book_section, backref='books')  
     ratings = db.relationship('Rating', backref='book', lazy='dynamic')

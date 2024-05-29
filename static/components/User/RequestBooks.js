@@ -22,7 +22,7 @@ export default {
                 <span style="margin-left: 10px;"> {{ allSelected ? 'Un-select All' : 'Select All' }}</span>
             </b-form-checkbox>
             <b-form-checkbox-group v-model="selected_books" style="margin-left:3%;margin-top:1%">
-                    <b-form-checkbox v-for="book in all_books" :key="book.id" :value="book.id" style="font-size: 1.1rem; margin-bottom:0.8%">
+                    <b-form-checkbox v-for="book in possible_books" :key="book.id" :value="book.id" style="font-size: 1.1rem; margin-bottom:0.8%">
                         <span style="margin-left: 10px;">{{ book.name }} ( {{ book.author }} )</span>
                     </b-form-checkbox>
             </b-form-checkbox-group>
@@ -73,6 +73,7 @@ export default {
                 })
             if (res.ok) {
                 const all_books = await res.json()
+                this.possible_books = all_books.filter(book => book.status=='AVAILABLE')
                 }
         },
     },
