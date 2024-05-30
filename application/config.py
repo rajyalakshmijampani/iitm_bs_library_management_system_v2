@@ -4,3 +4,5 @@ class Config(object):
     SECURITY_PASSWORD_SALT = "I_I_T_M_B_S"
     WTF_CSRF_ENABLED = False
     SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authentication-Token'
+    MAX_BOOKS_ALLOWED = 5
+    MAX_DAYS_OF_ISSUE = 7

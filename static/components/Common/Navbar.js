@@ -43,7 +43,7 @@ export default {
                     <br/><br/>
                     <router-link to="/books/request">Request Books</router-link>
                     <br/><br/>
-                    <router-link :to="{ path: '/books', query: { do: 'return' } }">Return Books</router-link>
+                    <router-link to="/books/return">Return Books</router-link>
                     <br/><br/>
                     <router-link :to="{ path: '/purchases'}">My Purchases</router-link>
                     <br/><br/>

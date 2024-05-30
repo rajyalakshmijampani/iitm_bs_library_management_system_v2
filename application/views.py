@@ -8,7 +8,6 @@ from datetime import datetime,timedelta
 from io import BytesIO
 from sqlalchemy import and_
 
-
 @app.get('/')
 def home():
     return render_template("index.html")
@@ -411,9 +410,12 @@ def get_userbook_by_id(id):
 @roles_required("user")
 def get_user_currentbooks():
     user_id=current_user.id
-    issues = Issue.query.filter_by(user_id=user_id,is_active=True).all()
-    requests = Request.query.filter_by(user_id=user_id,status='PENDING').all()
-    return jsonify({"issues" : issues , "requests" : requests})
+    issued_subquery = Issue.query.with_entities(Issue.book_id).filter_by(user_id=user_id,is_active=True).subquery()
+    issued_books = Book.query.filter(Book.id.in_(issued_subquery)).all()
+
+    requested_subquery = Issue.query.with_entities(Request.book_id).filter_by(user_id=user_id,status='PENDING').subquery()
+    requested_books = Book.query.filter(Book.id.in_(requested_subquery)).all()
+    return jsonify(**{"issues" : marshal(issued_books,book_fields) , "requests" : marshal(requested_books,book_fields)})
 
 @app.post('/user')
 @auth_required("token")
@@ -428,15 +430,15 @@ def user():
         return jsonify({"message": "Action required"}), 400
     
     user_id = current_user.id
-    book_id = data.get('book_id')
-    if not book_id:
-            return jsonify({"message": "Book id required"}), 400
-    book = Book.query.get(book_id)
-    if not book:
-        return jsonify({"message": "Invalid Book ID"}), 400
-    
+        
     if action=='RATE':
         rating = data.get('rating')
+        book_id = data.get('book_id')
+        if not book_id:
+                return jsonify({"message": "Book id required"}), 400
+        book = Book.query.get(book_id)
+        if not book:
+            return jsonify({"message": "Invalid Book ID"}), 400
 
         if not rating:
             return jsonify({"message": "Rating required"}), 400
@@ -457,6 +459,12 @@ def user():
         return jsonify({'message': 'Rating submitted successfully'})
 
     elif action=='REQUEST':
+        book_id = data.get('book_id')
+        if not book_id:
+                return jsonify({"message": "Book id required"}), 400
+        book = Book.query.get(book_id)
+        if not book:
+            return jsonify({"message": "Invalid Book ID"}), 400
         
         #is_issued = Issue.query.filter_by(book_id=book_id,is_active=True).first()
         #if (is_issued):
@@ -467,10 +475,10 @@ def user():
         if (book.status=="REQUESTED"):
             return jsonify({"message": "Book already requested by a user. Cannot place a new request"}), 400
         # Books count for user
-        issued_books = Issue.query.filter_by(book_id=book_id,user_id=user_id,is_active=True).count()
-        requested_books = Request.query.filter_by(book_id=book_id,user_id=user_id,status='PENDING').count()
+        issued_books = Issue.query.filter_by(user_id=user_id,is_active=True).count()
+        requested_books = Request.query.filter_by(user_id=user_id,status='PENDING').count()
 
-        if (issued_books+requested_books) >=5:
+        if (issued_books+requested_books) >= app.config['MAX_BOOKS_ALLOWED']:
             return jsonify({"message": "User already has max allowed count of issues+requests. Cannot place a new request"}), 400
         
         request_record = Request(book_id=book_id,user_id=user_id)
@@ -480,7 +488,52 @@ def user():
         db.session.commit()
         return jsonify({'message': 'Book requested successfully'})
 
+    elif action=='REQUEST_MANY':
+        request_book_ids = data.get('book_ids')
+        issued_books = Issue.query.filter_by(user_id=user_id,is_active=True).count()
+        requested_books = Request.query.filter_by(user_id=user_id,status='PENDING').count()
+        if (issued_books+requested_books+len(request_book_ids)) > app.config['MAX_BOOKS_ALLOWED']:
+            return jsonify({"message": "Requested book count exceeds max allowed limit"}), 400
+        for book_id in request_book_ids:
+            book = Book.query.get(book_id)
+            if not book:
+                return jsonify({"message": "Invalid Book ID in the list"}), 400
+            if (book.status=="ISSUED"):
+                return jsonify({"message": book.name + " already issued to a user. Cannot be requested"}), 400
+            if (book.status=="REQUESTED"):
+                return jsonify({"message": book.name + " already requested by a user. Cannot place a new request"}), 400
+            request_record = Request(book_id=book_id,user_id=user_id)
+            db.session.add(request_record)
+            book.status='REQUESTED'
+
+        db.session.commit()
+        return jsonify({'message': 'Books requested successfully'})
+    
+    elif action=='RETURN_MANY':
+        return_book_ids = data.get('book_ids')
+        for book_id in return_book_ids:
+            book = Book.query.get(book_id)
+            if not book:
+                return jsonify({"message": "Invalid Book ID in the list"}), 400
+            if (book.status != "ISSUED" or not(Issue.query.filter_by(book_id=book.id,user_id=user_id,is_active='ACTIVE'))):
+                return jsonify({"message": book.name + " not issued to the user"}), 400
+            
+            issue_record = Issue.query.filter_by(book_id=book_id,user_id=user_id,is_active=True).first()
+            issue_record.is_active=False
+            issue_record.return_date = datetime.now()
+            book.status='AVAILABLE'
+
+        db.session.commit()
+        return jsonify({'message': 'Books returned successfully'})
+        
+
     elif action=='CANCEL':
+        book_id = data.get('book_id')
+        if not book_id:
+                return jsonify({"message": "Book id required"}), 400
+        book = Book.query.get(book_id)
+        if not book:
+            return jsonify({"message": "Invalid Book ID"}), 400
 
         requested = Request.query.filter_by(book_id=book_id,user_id=user_id,status='PENDING').first()
         if not requested:
@@ -492,6 +545,13 @@ def user():
         return jsonify({'message': 'Request cancelled successfully'})
     
     elif action=='RETURN':
+        book_id = data.get('book_id')
+        if not book_id:
+                return jsonify({"message": "Book id required"}), 400
+        book = Book.query.get(book_id)
+        if not book:
+            return jsonify({"message": "Invalid Book ID"}), 400
+        
         issue = Issue.query.filter_by(book_id=book_id,user_id=user_id,is_active=True).first()
         if not issue:
             return jsonify({"message": "Book not issued to the user"}), 400

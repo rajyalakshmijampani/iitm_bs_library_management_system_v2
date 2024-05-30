@@ -4,17 +4,19 @@ import Profile from './components/Common/Profile.js'
 
 import Register from '/static/components/User/Register.js'
 import Userdashboard from './components/User/Userdashboard.js'
+import RequestBooks from './components/User/RequestBooks.js'
+import ReturnBooks from './components/User/ReturnBooks.js'
 
 import Libdashboard from './components/Librarian/Libdashboard.js'
 
 import BrowseBooks from './components/Book/BrowseBooks.js'
 import AddBook from './components/Book/AddBook.js'
 import OpenBook from './components/Book/OpenBook.js'
-import RequestBooks from './components/User/RequestBooks.js'
 
 import BrowseSections from './components/Section/BrowseSections.js'
 import AddSection from './components/Section/AddSection.js'
 import TagBooks from './components/Section/TagBooks.js'
+
 
 
 const routes = [
@@ -25,6 +27,7 @@ const routes = [
     { path: '/register', component: Register , name: 'Register'},
     { path: '/userdashboard', component: Userdashboard },
     { path: '/books/request', component: RequestBooks},
+    { path: '/books/return', component: ReturnBooks},
 
     { path: '/libdashboard', component: Libdashboard },
     
