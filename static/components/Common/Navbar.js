@@ -58,7 +58,7 @@ export default {
                     <br/><br/>
                     <router-link to="/books">Manage Books</router-link>
                     <br/><br/>
-                    <router-link :to="{ path: '/books', query: { do: 'issue' } }">Issue Books</router-link>
+                    <router-link to="/issue">Issue Books</router-link>
                     <br/><br/>
                     <router-link :to="{ path: '/books', query: { do: 'revoke' } }">Revoke Books</router-link>
                     <br/><br/>

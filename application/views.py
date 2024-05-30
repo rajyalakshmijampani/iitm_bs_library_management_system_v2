@@ -1,12 +1,13 @@
 from flask import current_app as app,jsonify,request,render_template,Response
 from flask_security import auth_required, roles_required,current_user
 from flask_restful import marshal,fields
-from .models import Request,db,User,Book,Section,Issue,Purchase,Rating,book_section
+from .models import Request,db,User,Book,Section,Issue,Purchase,Rating,book_section,Role
 from .datastore import datastore
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime,timedelta
 from io import BytesIO
 from sqlalchemy import and_
+from sqlalchemy.orm import aliased
 
 @app.get('/')
 def home():
@@ -389,6 +390,19 @@ def get_sections():
     return marshal(sections, section_fields)
 
 #---------------------------------------USER RELATED--------------------------#
+
+@app.get('/user/all')
+@auth_required("token")
+def get_users():
+    users = User.query.join(User.roles).filter(
+            and_(
+                User.active == True,
+                Role.name == 'user'
+            )
+        ).all()
+    if not users:
+        return jsonify({"message": "No users available"}), 404
+    return marshal(users, user_fields)
 
 @app.get('/userbook/<int:id>')
 @auth_required("token")
