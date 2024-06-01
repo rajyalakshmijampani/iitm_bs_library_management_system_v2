@@ -10,7 +10,7 @@ export default {
                 {{ section.name }}  ({{section.books.length}})
             </div>
             <div style="width:20%;" v-if="role=='admin'">
-              <router-link to="/books/edit" tag="button"
+              <router-link :to="{ name: 'EditSection', params: { section: section }}" tag="button"
                           style="background-color: white; color: #015668; border-radius: 8px;  padding: 6px 10px; border: 1px solid #015668; margin-right:2%; vertical-align: top;">
                   <i class="fa-regular fa-pen-to-square" style="color: #015668"></i> Edit
               </router-link>

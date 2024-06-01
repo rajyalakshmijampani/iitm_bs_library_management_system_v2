@@ -9,6 +9,7 @@ import ReturnBooks from './components/User/ReturnBooks.js'
 
 import Libdashboard from './components/Librarian/Libdashboard.js'
 import IssueBooks from './components/Librarian/IssueBooks.js'
+import RevokeBooks from './components/Librarian/RevokeBooks.js'
 
 import BrowseBooks from './components/Book/BrowseBooks.js'
 import AddBook from './components/Book/AddBook.js'
@@ -16,6 +17,7 @@ import OpenBook from './components/Book/OpenBook.js'
 
 import BrowseSections from './components/Section/BrowseSections.js'
 import AddSection from './components/Section/AddSection.js'
+import EditSection from './components/Section/EditSection.js'
 import TagBooks from './components/Section/TagBooks.js'
 
 
@@ -32,7 +34,8 @@ const routes = [
     { path: '/books/return', component: ReturnBooks},
 
     { path: '/libdashboard', component: Libdashboard },
-    { path: '/issue', component: IssueBooks },
+    { path: '/issue', component: IssueBooks , name: 'IssueBooks', props:true },
+    { path: '/revoke', component: RevokeBooks},
     
     { path: '/books', component: BrowseBooks },
     { path: '/books/add', component: AddBook },
@@ -40,7 +43,8 @@ const routes = [
 
     { path: '/sections', component: BrowseSections },
     { path: '/sections/add', component: AddSection},
-    { path: '/sections/tag', name: 'TagBooks', component: TagBooks, props: true}
+    { path: '/sections/edit', component: EditSection, name: 'EditSection', props: true},
+    { path: '/sections/tag', component: TagBooks, name: 'TagBooks',  props: true}
 ]
 
 export default new VueRouter({

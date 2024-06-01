@@ -414,7 +414,9 @@ export default {
                 }
             }
         },
-        async issueBook(){},
+        async issueBook(){
+            this.$router.push({ name: 'IssueBooks', params : { selected_books:[this.id] } })
+        },
         async revokeBook(){
             var result = confirm("Are you sure you want to revoke this book?");
             if (result){

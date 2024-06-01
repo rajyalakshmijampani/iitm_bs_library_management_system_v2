@@ -60,7 +60,7 @@ export default {
                     <br/><br/>
                     <router-link to="/issue">Issue Books</router-link>
                     <br/><br/>
-                    <router-link :to="{ path: '/books', query: { do: 'revoke' } }">Revoke Books</router-link>
+                    <router-link to="/revoke">Revoke Books</router-link>
                     <br/><br/>
 
                 </div>
