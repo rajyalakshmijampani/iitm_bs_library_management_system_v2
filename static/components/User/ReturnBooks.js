@@ -27,7 +27,7 @@ export default {
         <div class="form-group" style="margin-top: 2%;">
             <label class="col-md-4 control-label" for="submit"></label>
             <div class="col-md-8">
-                <button class="btn btn-success" style="margin-right: 1%; background-color: #015668" 
+                <button class="btn btn-outline-danger" style="margin-right: 1%;" 
                         :disabled="selected_books.length==0" 
                         @click='returnBooks'>Return Selected</button>
                 <button class="btn btn-default" style="margin-left: 1%; border-color: #015668" @click='goBack'>Cancel</button>
@@ -62,7 +62,7 @@ export default {
             this.$router.back()
         },
         async loadUserBooks(){
-            const res = await fetch('/user/currentbooks', {
+            const res = await fetch(`/user/${this.user_id}/currentbooks`, {
                 headers: {
                     "Authentication-Token": this.token
                     }
@@ -73,35 +73,37 @@ export default {
                 }
         },
         async returnBooks(){
-            const res = await fetch('/user', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authentication-Token': this.token
-                },
-                body: JSON.stringify({
-                    'action' : 'RETURN_MANY',
-                    'book_ids' : this.selected_books
+            var result = confirm("Are you sure you want to return the selected book(s)?");
+            if (result){
+                const res = await fetch('/user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': this.token
+                    },
+                    body: JSON.stringify({
+                        'action' : 'RETURN_MANY',
+                        'book_ids' : this.selected_books
+                    })
+
                 })
-
-            })
-            const data = await res.json()
-            if (res.ok) {
-                alert(data.message)
-                this.$router.go(0)
+                const data = await res.json()
+                if (res.ok) {
+                    alert(data.message)
+                    this.$router.go(0)
+                }
+                else {
+                    this.error = data.message
+                }
             }
-            else {
-                this.error = data.message
-            }
-
-            }
+        }
     },
     watch: {
         selected_books(newValue) {
                 // Handle changes in individual section checkboxes
                 if (newValue.length === 0) {
                     this.allSelected = false
-                } else if (newValue.length === this.possible_books.length) {
+                } else if (newValue.length === this.user_books.length) {
                     this.allSelected = true
                 } else {
                     this.allSelected = false

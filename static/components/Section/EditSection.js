@@ -65,7 +65,6 @@ export default {
             this.$router.back()
         },
         async updateSection(){
-            
             const res = await fetch('/section/update', {
                 method: 'POST',
                 headers: {

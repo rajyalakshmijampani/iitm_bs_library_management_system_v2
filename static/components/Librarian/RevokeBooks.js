@@ -28,7 +28,7 @@ export default {
         <div class="form-group" style="margin-top: 2%;">
             <label class="col-md-4 control-label" for="submit"></label>
             <div class="col-md-8">
-                <button class="btn btn-success" style="margin-right: 1%; background-color: #015668" 
+                <button class="btn btn-outline-danger" style="margin-right: 1%;" 
                         :disabled="selectedBooks.length==0" 
                         @click='revokeBooks'>Revoke Books</button>
                 <button class="btn btn-default" style="margin-left: 1%; border-color: #015668" @click='goBack'>Cancel</button>
@@ -71,25 +71,28 @@ export default {
             this.bookList = books.filter(book => book.status =='ISSUED');
         },
         async revokeBooks(){
-            const res = await fetch('/admin', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authentication-Token': this.token
-                    },
-                    body: JSON.stringify({
-                        'action' : 'REVOKE_MANY',
-                        'book_ids' : this.selectedBooks
+            var result = confirm("Are you sure you want to revoke the selected book(s)?");
+            if (result){
+                const res = await fetch('/admin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authentication-Token': this.token
+                        },
+                        body: JSON.stringify({
+                            'action' : 'REVOKE_MANY',
+                            'book_ids' : this.selectedBooks
+                        })
+        
                     })
-    
-                })
-                const data = await res.json()
-                if (res.ok) {
-                    alert(data.message)
-                    this.$router.go(0)
-                }
-                else {
-                    this.error = data.message
+                    const data = await res.json()
+                    if (res.ok) {
+                        alert(data.message)
+                        this.$router.go(0)
+                    }
+                    else {
+                        this.error = data.message
+                    }
                 }
             }
     },

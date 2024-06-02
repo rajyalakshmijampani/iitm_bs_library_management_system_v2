@@ -241,8 +241,12 @@ def update_book():
         book = Book.query.get(id)
         if not book:
             return jsonify({"message":"Invalid Book ID"}),400
-    if name:
-        book.name = name
+    if name and name != book.name:
+        existing_book = Book.query.filter_by(name=name).first()
+        if existing_book:
+            return jsonify({"message":"Book name already exists"}),400
+        else:
+            book.name = name
     if author:
         book.author=author
     if content :
@@ -377,10 +381,33 @@ def get_sections():
 @roles_required("admin")
 def update_section():
     data = request.get_json()
+
+    if not data:
+        return jsonify({"message": "Request body required"}),400
+    
     section_id = data.get('id')
+
+    if not section_id:
+        return jsonify({"message": "Section ID required"}),400
+    else:
+        section=Section.query.get(section_id)
+        if not section:
+            return jsonify({"message":"Invalid Section ID"}),400
+    
     name = data.get('name')
     description = data.get('description')
-    
+    if name and name != section.name :
+        existing_section = Section.query.filter_by(name=name).first()
+        if existing_section:
+            return jsonify({"message":"Section name already exists"}),400
+        else:
+            section.name = name
+    if description:
+        section.description = description
+
+    db.session.commit()
+    marshalled_data = marshal(section, section_fields)
+    return jsonify({**marshalled_data, **{"message":"Section updated successfully"}})    
 
 
 @app.post('/section/tagbooks')

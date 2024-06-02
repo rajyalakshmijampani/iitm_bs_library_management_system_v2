@@ -80,7 +80,7 @@ export default {
                 }
         },
         async userBooks(){
-            const res = await fetch(`/user/${user_id}/currentbooks`, {
+            const res = await fetch(`/user/${this.user_id}/currentbooks`, {
                 headers: {
                     "Authentication-Token": this.token
                     }
