@@ -44,7 +44,7 @@ export default {
             token: JSON.parse(localStorage.getItem('user')).token,
             user_id: JSON.parse(localStorage.getItem('user')).id,
             possible_books: [],
-            user_current_books: {'issues':[],'requests':[]},
+            user_current_books: {'issues':[],'requests':[],'purchases':[]},
             error: null,
             selected_books: [],
             allSelected: false,

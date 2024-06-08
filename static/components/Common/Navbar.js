@@ -45,8 +45,6 @@ export default {
                     <br/><br/>
                     <router-link to="/books/return">Return Books</router-link>
                     <br/><br/>
-                    <router-link :to="{ path: '/purchases'}">My Purchases</router-link>
-                    <br/><br/>
                 </div>
             </div>
             <div class="col-2" style="width: 15%; padding-right: 0px;" v-if="role=='admin'">  

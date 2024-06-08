@@ -427,6 +427,24 @@ def tagbooks():
     marshalled_data = marshal(section, section_fields)
     return jsonify({**marshalled_data, **{"message":"Books tagged to the section successfully"}})
 
+#---------------------DELETE------------------#
+
+@app.get('/section/delete/<int:id>')
+@auth_required("token")
+@roles_required("admin")
+def delete_section(id):
+    section = Section.query.get(id)  
+    if not section:
+        return jsonify({"message": "Section not found"}), 404
+    no_of_books = len(section.books)
+
+    for book in section.books:
+        book.sections.remove(section)
+    
+    db.session.delete(section)
+    db.session.commit()
+    
+    return jsonify({"message": "Section deleted and "+str(no_of_books)+" book(s) untagged successfully"})
 
 
 #---------------------------------------USER RELATED--------------------------#
@@ -467,7 +485,13 @@ def get_user_currentbooks(user_id):
 
     requested_subquery = Issue.query.with_entities(Request.book_id).filter_by(user_id=user_id,status='PENDING').subquery()
     requested_books = Book.query.filter(Book.id.in_(requested_subquery)).all()
-    return jsonify(**{"issues" : marshal(issued_books,book_fields) , "requests" : marshal(requested_books,book_fields)})
+
+    purchased_subquery = Purchase.query.with_entities(Purchase.book_id).filter_by(user_id=user_id).subquery()
+    purchased_books = Book.query.filter(Book.id.in_(purchased_subquery)).all()
+
+    return jsonify(**{"issues" : marshal(issued_books,book_fields), 
+                      "requests" : marshal(requested_books,book_fields),
+                      "purchases" : marshal(purchased_books,book_fields)})
 
 @app.post('/user')
 @auth_required("token")
@@ -611,6 +635,13 @@ def user():
             return jsonify({'message': 'Book returned successfully'})
     
     elif action=='PURCHASE':
+        book_id = data.get('book_id')
+        if not book_id:
+                return jsonify({"message": "Book id required"}), 400
+        book = Book.query.get(book_id)
+        if not book:
+            return jsonify({"message": "Invalid Book ID"}), 400
+        
         is_purchased = Purchase.query.filter_by(book_id=book_id,user_id=user_id).first()
         if is_purchased:
             return jsonify({"message": "Book already purchased by the user"}), 400
