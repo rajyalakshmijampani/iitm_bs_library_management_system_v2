@@ -5,22 +5,11 @@ export default {
     <nav class="navbar bg-body-tertiary">
         <div class="container-fluid">
             <!-- Top left logo -->
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand">
                 <img src="http://localhost:5000/static/images/logo.png" alt="ClickReads" width="350" height="60">
             </a>
-            <div style="display: flex; width: 50%;">
-                <select class="form-select" id="param" name="param" style="width: 100%;">
-                    <option value="bookname" selected>Book</option>
-                    <option value="section">Section</option>
-                    <option value="author">Author</option>
-                </select>
-                <input type="text" class="form-control" id="query" name="query" style="width: 400%;margin-left: 1%; margin-right: 1%;" placeholder="Get ready to read...">
-                <button type="submit" class="btn btn-primary" style="background-color: #015668;border-color: #015668;">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
             <li class="nav-item dropdown" style="list-style-type: none;">
-                    <a class="nav-link dropdown-toggle" href="/" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
                         Welcome, {{name}}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
@@ -45,6 +34,8 @@ export default {
                     <br/><br/>
                     <router-link to="/books/return">Return Books</router-link>
                     <br/><br/>
+                    <router-link to="/search">Search Collection</router-link>
+                    <br/><br/>
                 </div>
             </div>
             <div class="col-2" style="width: 15%; padding-right: 0px;" v-if="role=='admin'">  
@@ -60,6 +51,8 @@ export default {
                     <br/><br/>
                     <router-link to="/revoke">Revoke Books</router-link>
                     <br/><br/>
+                    <router-link to="/search">Search Collection</router-link>
+                    <br/><br/>
 
                 </div>
             </div>
@@ -72,7 +65,7 @@ export default {
             role: JSON.parse(localStorage.getItem('user')).role,
             name: JSON.parse(localStorage.getItem('user')).name,
             message: null,
-            message_type: null
+            message_type: null,
         }
     },
     methods: {
@@ -85,6 +78,18 @@ export default {
         logout() {
             localStorage.clear()
             this.$router.push("/")
-        }
+        },
+        async loadBooks() {
+            const res = await fetch('/book/all', {
+                headers: {
+                    "Authentication-Token": this.token
+                    }
+                })
+            if (res.ok) {
+                const data = await res.json()
+                const allBooks = data
+                const no_of_books = Object.keys(data).length
+                }
+        },
     }
 }

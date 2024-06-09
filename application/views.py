@@ -113,7 +113,7 @@ def change_password(id):
 class IssuedTo(fields.Raw):
     def format(self, id):
         issue = Issue.query.filter_by(book_id=id,is_active=True).first()
-        return {'id':issue.user.id,'name':issue.user.name} if issue else None
+        return {'id':issue.user.id,'name':issue.user.name,'expiry':str(issue.return_date)} if issue else None
 
 class RequestedBy(fields.Raw):
     def format(self, id):
@@ -686,6 +686,7 @@ def admin():
             issue = Issue(book_id=book_id,
                         user_id=request_record.user_id,
                         issue_date=datetime.now(),
+                        return_date=datetime.now()+timedelta(days=app.config['MAX_DAYS_OF_ISSUE']),
                         is_active=True)
             db.session.add(issue)
             book.status = 'ISSUED'

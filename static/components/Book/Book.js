@@ -6,7 +6,19 @@ export default {
                         img-top style="width:75%;margin-left:12%"></b-card-img>
         </router-link></br>
         <p class="card-text text-truncate" style="margin-top:2vh"><b>{{book.name}}</b></p>
-        <div style="display: flex;justify-content: space-between;align-items:center;">
+
+        <div v-if="page=='user_dashboard'" style="display: flex;justify-content: space-between;align-items:center;">
+
+          <p v-if="this.isExpired(book.issued_to.expiry)==true" style="color:red;margin-bottom:0;"><b>Expired</b></p>
+          <p v-else style="margin-bottom:0;"> Expiry: {{this.formatDate(book.issued_to.expiry)}}</p>
+
+        </div>
+
+        <div v-else-if="page=='search_results' || page=='section_page'" style="display: flex;justify-content: space-between;align-items:center;">
+          <p style="margin-bottom:0"> By {{book.author}}</p>
+        </div>
+
+        <div v-else style="display: flex;justify-content: space-between;align-items:center;">
             <p v-if="book.average_rating !== null" style="margin-bottom:0;"> Avg. Rating: {{ book.average_rating }}</p>
 
             <p v-else style="margin-bottom:0;">No ratings yet</p>
@@ -30,6 +42,19 @@ export default {
       }
     },
     methods: {
+      formatDate(value) {
+        const date = new Date(value);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = date.toLocaleString('default', { month: 'short' });
+        const year = date.getFullYear();
+        const hours = date.getHours() % 12 || 12;
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+        return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+      },
+      isExpired(bookdate){
+        return this.formatDate(bookdate) < this.formatDate(new Date());
+      },
         confirmDelete(book_id,book_name){
             var result = confirm("Are you sure you want to delete the book '" + book_name + "' ?");
             if (result)

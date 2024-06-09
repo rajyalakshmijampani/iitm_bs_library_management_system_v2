@@ -1,6 +1,7 @@
 import ChangePwd from './components/Common/ChangePwd.js'
 import Login from './components/Common/Login.js'
 import Profile from './components/Common/Profile.js'
+import Search from './components/Common/Search.js'
 
 import Register from '/static/components/User/Register.js'
 import Userdashboard from './components/User/Userdashboard.js'
@@ -22,11 +23,11 @@ import TagBooks from './components/Section/TagBooks.js'
 
 
 
-
 const routes = [
     { path: '/', component: Login, name: 'Login' },
     { path: '/profile', component: Profile },
     { path: '/changepwd', component: ChangePwd},
+    { path: '/search', component: Search},
     
     { path: '/register', component: Register , name: 'Register'},
     { path: '/userdashboard', component: Userdashboard },

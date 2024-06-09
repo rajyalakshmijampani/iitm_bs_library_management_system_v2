@@ -15,17 +15,18 @@ export default {
                 <div>
                     <b-tabs content-class="mt-3" fill>
                         <b-tab title="My Holdings" active>
-                            <h4 style="color: #015668;margin-left:2%;margin-top:2%"> You have {{this.user_current_books.issues.length}} books issued !! </h4>
+                            <h4 style="color: #015668;margin-left:2%;margin-top:3%"> {{this.user_current_books.issues.length}} book(s) in your account currently !! </h4>
                             <b-container style="margin-top:3%">
                                 <b-row>
                                     <b-col v-for="(book,index) in user_current_books.issues" :key="index" cols="3" class="mb-3">
-                                        <Book :book="book"/>
+                                        <Book :book="book" :page='location'/>
                                     </b-col>
                                 </b-row>
                             </b-container>
                         </b-tab>
                         <b-tab title="My Purchases">
-                            <b-container>
+                            <h4 style="color: #015668;margin-left:2%;margin-top:3%"> {{this.user_current_books.purchases.length}} book(s) purchased !! </h4>
+                            <b-container style="margin-top:3%">
                                 <b-row>
                                     <b-col v-for="(book,index) in user_current_books.purchases" :key="index" cols="3" class="mb-3">
                                         <Book :book="book"/>
@@ -33,7 +34,16 @@ export default {
                                 </b-row>
                             </b-container>
                         </b-tab>
-                        <b-tab title="Pending Requests"><p>I'm the tab with the very, very long title</p></b-tab>
+                        <b-tab title="Pending Requests">
+                            <h4 style="color: #015668;margin-left:2%;margin-top:3%"> {{this.user_current_books.requests.length}} request(s) pending for admin's approval !! </h4>
+                            <b-container style="margin-top:3%">
+                                <b-row>
+                                    <b-col v-for="(book,index) in user_current_books.requests" :key="index" cols="3" class="mb-3">
+                                        <Book :book="book"/>
+                                    </b-col>
+                                </b-row>
+                            </b-container>
+                        </b-tab>
                         
                     </b-tabs>
                 </div>
@@ -51,7 +61,8 @@ export default {
             user_id: JSON.parse(localStorage.getItem('user')).id,
             user_name: JSON.parse(localStorage.getItem('user')).name,
             user_current_books: {'issues':[],'requests':[],'purchases':[]},
-            error: null
+            error: null,
+            location: 'user_dashboard'
         }
     },
     created(){

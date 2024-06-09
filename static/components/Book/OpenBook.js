@@ -98,7 +98,7 @@ export default {
                         <p v-else>Issued to {{book.issued_to.name}}</p>
                     </div>
                     <div style="width: 75%;" v-else-if="book.issued_to.id == userid">
-                        <p v-if="role=='user'">Issued to self</p>
+                        <p v-if="role=='user'">Issued to self <b v-if="this.isExpired()==true" style="color:red;">(Expired)</b></p>
                         <p v-else>Issued to {{book.issued_to.name}}</p>
                     </div>
                 </div>
@@ -122,9 +122,9 @@ export default {
 
                     <div v-if="book.issued_to != null && book.issued_to.id==userid && role=='user'" style="display:flex;padding-left:0"> 
                         <button class="btn btn-success" style="background-color: #015668; width:35%;margin-right:5%"
-                                @click='readBook(book.content)'>Read e-book</button>
+                                @click='readBook(book.content)' :disabled="isExpired()">Read e-book</button>
                         <button class="btn btn-outline-danger" style="width:35%"
-                                @click='returnBook'>Return e-book</button>
+                                @click='returnBook' :disabled="isExpired()">Return e-book</button>
                     </div>
                     <button class="btn btn-outline-danger" v-if="book.issued_to!=null && role=='admin'"
                             style="width:50%" @click='revokeBook'>Revoke e-book</button>
@@ -174,6 +174,19 @@ export default {
             this.loadUserBookData();
     },
     methods: {
+        formatDate(value) {
+            const date = new Date(value);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = date.toLocaleString('default', { month: 'short' });
+            const year = date.getFullYear();
+            const hours = date.getHours() % 12 || 12;
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+            return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+            },
+        isExpired(){
+            return this.formatDate(this.book.issued_to.expiry) < this.formatDate(new Date());
+        },
         toggleAll(checked) {
             this.book.sections = checked ? Object.values(this.allSections).map(section => section.id) : []
         },
