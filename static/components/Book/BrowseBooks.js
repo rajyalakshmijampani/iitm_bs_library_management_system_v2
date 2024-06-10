@@ -24,10 +24,12 @@ export default {
         <div class="row" style="margin-top:3vh;">
             <b-container>
                 <b-row>
-                    <b-col v-for="(book,index) in allBooks" :key="index" cols="3" class="mb-3">
+                    <b-col v-for="(book,index) in paginatedBooks" :key="index" cols="3" class="mb-3">
                         <Book :book="book"/>
                     </b-col>
                 </b-row>
+                <p style="margin-top:5%;margin-left:42%">Showing 4 results per page</p>
+                <b-pagination  v-model="currentPage" :total-rows="totalBooks" :per-page="booksPerPage" style="justify-content:center"/>
             </b-container>
         </div>
     </div>
@@ -38,9 +40,21 @@ export default {
             token: JSON.parse(localStorage.getItem('user')).token,
             role: JSON.parse(localStorage.getItem('user')).role,
             no_of_books: 0,
-            error: null
+            error: null,
+            currentPage: 1,
+            booksPerPage: 4,
         }
     },
+    computed: {
+        totalBooks() {
+          return this.allBooks.length;
+        },
+        paginatedBooks() {
+          const start = (this.currentPage - 1) * this.booksPerPage;
+          const end = start + this.booksPerPage;
+          return this.allBooks.slice(start, end);
+        }
+      },
     components: {
         Navbar,
         Book

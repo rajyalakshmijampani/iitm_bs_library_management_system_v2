@@ -52,7 +52,7 @@ export default {
     },
     methods: {
         toggleAll(checked) {
-            this.selected_books = checked ? Object.values(this.all_books).map(book => book.id) : []
+            this.selected_books = checked ? Object.values(this.possible_books).map(book => book.id) : []
         },
         clearMessage() {
             this.error = null
@@ -95,7 +95,7 @@ export default {
                 // Handle changes in individual section checkboxes
                 if (newValue.length === 0) {
                     this.allSelected = false
-                } else if (newValue.length === this.all_books.length) {
+                } else if (newValue.length === this.possible_books.length) {
                     this.allSelected = true
                 } else {
                     this.allSelected = false

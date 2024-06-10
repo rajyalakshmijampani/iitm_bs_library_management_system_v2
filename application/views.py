@@ -309,7 +309,8 @@ def untag_book():
 @roles_required("admin")
 def delete_book(id):
     book = Book.query.get(id)  
-    issue=Issue.query.filter_by(book_id=id).first()
+    issues=Issue.query.filter_by(book_id=id).all()
+    requests=Request.filter_by(book_id=id).all()
     purchases=Purchase.query.filter_by(book_id=id).all()
     ratings=Rating.query.filter_by(book_id=id).all()
 
@@ -317,8 +318,10 @@ def delete_book(id):
         return jsonify({"message": "Book not found"}), 404
     
     db.session.delete(book)
-    if issue:
+    for issue in issues:
         db.session.delete(issue)
+    for request in requests:
+        db.session.delete(request)
     for purchase in purchases:
         db.session.delete(purchase)
     for rating in ratings:
@@ -693,6 +696,31 @@ def admin():
             db.session.commit()
             return jsonify({'message': 'Request approved successfully'})
     
+    elif action=='APPROVE_MANY':
+        book_ids = data.get('book_ids')
+        if not book_ids:
+            return jsonify({"message": "Book ids required"}), 400
+        
+        for book_id in book_ids:
+            book = Book.query.get(book_id)
+            if not book:
+                return jsonify({"message": "Invalid Book ID in the list"}), 400
+            request_record = Request.query.filter_by(book_id=book_id,status='PENDING').first()
+            if not request_record:
+                return jsonify({"message": "No pending requests for the book"+str(book.name)}), 400
+            else:
+                request_record.status='APPROVED'
+                issue = Issue(book_id=book_id,
+                            user_id=request_record.user_id,
+                            issue_date=datetime.now(),
+                            return_date=datetime.now()+timedelta(days=app.config['MAX_DAYS_OF_ISSUE']),
+                            is_active=True)
+                db.session.add(issue)
+                book.status = 'ISSUED'
+
+        db.session.commit()
+        return jsonify({'message': 'Request(s) approved successfully'})
+    
     elif action=='REJECT':
         book_id = data.get('book_id')
         if not book_id:
@@ -709,6 +737,25 @@ def admin():
             book.status='AVAILABLE'
             db.session.commit()
             return jsonify({'message': 'Request rejected successfully'})
+    
+    elif action=='REJECT_MANY':
+        book_ids = data.get('book_ids')
+        if not book_ids:
+            return jsonify({"message": "Book ids required"}), 400
+        
+        for book_id in book_ids:
+            book = Book.query.get(book_id)
+            if not book:
+                return jsonify({"message": "Invalid Book ID in the list"}), 400
+            request_record = Request.query.filter_by(book_id=book_id,status='PENDING').first()
+            if not request_record:
+                return jsonify({"message": "No pending requests for the book"+str(book.name)}), 400
+            else:
+                request_record.status='REJECTED'
+                book.status='AVAILABLE'
+
+        db.session.commit()
+        return jsonify({'message': 'Request(s) rejected successfully'})
     
     elif action=='ISSUE':  # Multiple book_ids as list
         book_ids = data.get('book_ids')

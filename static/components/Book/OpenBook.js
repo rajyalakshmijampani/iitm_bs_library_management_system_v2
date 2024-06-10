@@ -95,11 +95,11 @@ export default {
                     </div>
                     <div style="width: 75%;" v-else-if="book.issued_to.id != userid">
                         <p v-if="role=='user'">Issued to others</p>
-                        <p v-else>Issued to {{book.issued_to.name}}</p>
+                        <p v-else>Issued to {{book.issued_to.name}} <b v-if="this.isExpired()==true" style="color:red;">(Expired)</b></p>
                     </div>
                     <div style="width: 75%;" v-else-if="book.issued_to.id == userid">
                         <p v-if="role=='user'">Issued to self <b v-if="this.isExpired()==true" style="color:red;">(Expired)</b></p>
-                        <p v-else>Issued to {{book.issued_to.name}}</p>
+                        <p v-else>Issued to {{book.issued_to.name}} <b v-if="this.isExpired()==true" style="color:red;">(Expired)</b></p>
                     </div>
                 </div>
                 

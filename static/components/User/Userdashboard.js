@@ -28,10 +28,12 @@ export default {
                             <h4 style="color: #015668;margin-left:2%;margin-top:3%"> {{this.user_current_books.purchases.length}} book(s) purchased !! </h4>
                             <b-container style="margin-top:3%">
                                 <b-row>
-                                    <b-col v-for="(book,index) in user_current_books.purchases" :key="index" cols="3" class="mb-3">
+                                    <b-col v-for="(book,index) in paginatedPurchases" :key="index" cols="3" class="mb-3">
                                         <Book :book="book"/>
                                     </b-col>
                                 </b-row>
+                                <p style="margin-top:5%;margin-left:42%">Showing 4 results per page</p>
+                                <b-pagination v-model="currentPage" :total-rows="totalPurchases" :per-page="booksPerPage" style="justify-content:center"/>
                             </b-container>
                         </b-tab>
                         <b-tab title="Pending Requests">
@@ -62,9 +64,21 @@ export default {
             user_name: JSON.parse(localStorage.getItem('user')).name,
             user_current_books: {'issues':[],'requests':[],'purchases':[]},
             error: null,
-            location: 'user_dashboard'
+            location: 'user_dashboard',
+            currentPage: 1,
+            booksPerPage: 4,
         }
     },
+    computed: {
+        totalPurchases() {
+          return this.user_current_books.purchases.length;
+        },
+        paginatedPurchases() {
+          const start = (this.currentPage - 1) * this.booksPerPage;
+          const end = start + this.booksPerPage;
+          return this.user_current_books.purchases.slice(start, end);
+        }
+      },
     created(){
         this.userBooks()
     },

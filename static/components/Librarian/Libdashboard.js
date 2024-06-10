@@ -1,28 +1,77 @@
 import Navbar from "/static/components/Common/Navbar.js"
-import Book from "/static/components/Book/Book.js"
 
 export default {
     template: `
     <Navbar>
         <div class="col">
-            <div class="row" style="margin : 2vh 0 2vh 0; width:30%; height: 5vh;align-items: center;">
-                <div style="padding-left: 0;color:red;" v-if="error">
-                    {{ error }}
-                    <button class="btn-close" style="float: inline-end;" @click="clearMessage"></button>
-                </div>
-            </div>
-            <div class="row mb-3" style="display:flex;justify-content:center;height:75vh;">
+            <div class="row mb-3" style="margin-top:5%;display:flex;justify-content:center;height:75vh;">
                 <b-card nobody style="border:1px solid #015668">    
                     <b-tabs pills card fill>
-                        <b-tab title="Graphical Summary" active>
-                            
+                        <b-tab title="Graphical Summary" style="display:flex" active>
+                            <div style="width:50%; margin-right:2%;">
+                                <p id="nosections" style="margin-left:25%;font-size: 16px;">No sections to generate distribution</p>
+                                <canvas id="sectionSummaryChart" style="margin-top:1%" height="400"></canvas> 
+                            </div>
+                            <div style="width:50%;">
+                                <p id="noissues" style="margin-left:25%;font-size: 16px;">No issues/returns to generate trend</p>
+                                <canvas id="issueTrendChart" style="margin-top:1%" height="400"></canvas> 
+                            </div>                           
                         </b-tab>
+
                         <b-tab title="Approve/Reject Requests">
-            
+                            <div class="overflow-auto">
+                                <b-table :items="requestedBooks" :fields= "['selected', 'Book ID', 'Name', 'Author', 'Requested By']" :per-page="perPage" :current-page="currentPage" 
+                                        select-mode="multi" responsive="sm" ref="RequestsTable" selectable  @row-selected="onRowSelectedRequests" 
+                                        style="width:85%;margin-top:2%;margin-left:7%;text-align:center;">
+                                    <template #cell(selected)="{ rowSelected }">
+                                        <template v-if="rowSelected">
+                                            <span aria-hidden="true">&check;</span>
+                                            <span class="sr-only">Selected</span>
+                                        </template>
+                                        <template v-else>
+                                            <span aria-hidden="true">&nbsp;</span>
+                                            <span class="sr-only">Not selected</span>
+                                        </template>
+                                    </template>
+                                </b-table>
+                                <p style="margin-left:7%;">
+                                    <b-button @click="selectAllRows($refs.RequestsTable)">Select all</b-button>
+                                    <b-button @click="clearSelected($refs.RequestsTable)">Clear selected</b-button>
+                                    <button class="btn btn-success" style="background-color: #015668;" :disabled="requestsSelected.length==0" 
+                                            @click="approve">Approve Requests</button>
+                                    <button class="btn btn-danger" :disabled="requestsSelected.length==0"
+                                            @click="reject">Reject Requests</button>
+                                </p>                                
+                                <p style="margin-top:3%;margin-left:42%">Showing 5 results per page</p>
+                                <b-pagination v-model="currentPage" :total-rows="requestedBooks.length" :per-page="perPage" style="justify-content:center"></b-pagination>
+                            </div>
                         </b-tab>
-                        
+
+
                         <b-tab title="Revoke expired books">
-                        <p>Hi</p>  
+                            <div class="overflow-auto">
+                                <b-table :items="expiredBooks" :fields= "['selected', 'Book ID', 'Name', 'Author', 'Issued to','Expired On']" :per-page="perPage" :current-page="currentPage" 
+                                        select-mode="multi" responsive="sm" ref="selectableTable" selectable  @row-selected="onRowSelectedExpiredBooks" 
+                                        style="width:85%;margin-top:2%;margin-left:7%;text-align:center;">
+                                    <template #cell(selected)="{ rowSelected }">
+                                        <template v-if="rowSelected">
+                                            <span aria-hidden="true">&check;</span>
+                                            <span class="sr-only">Selected</span>
+                                        </template>
+                                        <template v-else>
+                                            <span aria-hidden="true">&nbsp;</span>
+                                            <span class="sr-only">Not selected</span>
+                                        </template>
+                                    </template>
+                                </b-table>
+                                <p style="margin-left:7%;">
+                                    <b-button @click="selectAllRows($refs.selectableTable)">Select all</b-button>
+                                    <b-button @click="clearSelected($refs.selectableTable)">Clear selected</b-button>
+                                    <button class="btn btn-danger" :disabled="expiredBooksSelected.length==0" @click="revokeBooks">Revoke Books</button>
+                                </p>                                
+                                <p style="margin-top:3%;margin-left:42%">Showing 5 results per page</p>
+                                <b-pagination v-model="currentPage" :total-rows="expiredBooks.length" :per-page="perPage" style="justify-content:center"></b-pagination>
+                            </div>
                         </b-tab>
                         <b-tab title="All Users">
                             <div class="overflow-auto">
@@ -38,21 +87,155 @@ export default {
     </Navbar>
     `,
     components:{
-        Navbar,
-        Book
+        Navbar
     },
     data() {
         return {
             token: JSON.parse(localStorage.getItem('user')).token,
+            requestedBooks:[],
+            expiredBooks:[],
             userList: [],
+            requestsSelected: [],
+            expiredBooksSelected: [],
             perPage: 5,
-            currentPage: 1
+            currentPage: 1,
+            section_labels:[],
+            section_books: []
         }
     },
-    created(){
+    mounted(){
+        this.loadSectionSummary()
+        this.loadRequestedBooks()
+        this.loadExpiredBooks()
         this.loadUsers()
     },
     methods: {
+        onRowSelectedExpiredBooks(items){
+            this.expiredBooksSelected = items.map(item=>item["Book ID"])
+        },
+        onRowSelectedRequests(items){
+            this.requestsSelected = items.map(item=>item["Book ID"])
+        },
+        selectAllRows(table) {
+            table.selectAllRows()
+        },
+        clearSelected(table) {
+            table.clearSelected()
+        },
+        async loadSectionSummary(){
+            const res = await fetch('/section/all', {
+                headers: {
+                    "Authentication-Token": this.token
+                    }
+                })
+            if (res.ok) {
+                const data = await res.json()
+                const allSections = data.map(section => {
+                                        return {"name":section.name,"bookcount":section.books.length}
+                                        })
+                this.section_labels = allSections.map(section => section.name);
+                this.section_books = allSections.map(section => section.bookcount)
+                document.getElementById("nosections").style.display = 'none';
+                this.drawSectionSummaryChart()
+            }
+        },
+        drawSectionSummaryChart(){
+            const generateRandomColor = () => {
+                let r, g, b;
+                let isWhite = true;
+                let isRepeated = true;
+                // Generate a color until it's not too close to white
+                do {
+                  r = Math.floor(Math.random() * 256);
+                  g = Math.floor(Math.random() * 256);
+                  b = Math.floor(Math.random() * 256);
+                  isWhite = (r > 200 && g > 200 && b > 200);
+                  isRepeated = (r==g || g==b || r==b)
+                } while (isWhite || isRepeated);
+
+                const toHex = x => x.toString(16).padStart(2, '0')
+                return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+
+              };
+             
+            const generateRandomColors = (numColors) => {
+            const colors = [];
+            for (let i = 0; i < numColors; i++) {
+                colors.push(generateRandomColor());
+            }
+            return colors;
+            };
+
+            const backgroundColors = generateRandomColors(this.section_labels.length)
+
+            const ctx = document.getElementById('sectionSummaryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                labels: this.section_labels,
+                datasets: [{
+                    data: this.section_books,
+                    backgroundColor: backgroundColors
+                }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 16
+                                },
+                            }
+                            
+                        },
+                        title: {
+                            display: true,
+                            text: 'Section-wise book distribution',
+                            font: {
+                                size: 20
+                            },
+                            padding: 30
+                        }
+                    }                
+                },
+                
+            });
+        },
+        async loadRequestedBooks(){
+            const res = await fetch('/book/all', {
+                headers: {
+                    "Authentication-Token": this.token
+                    }
+                })
+            if (res.ok) {
+                const data = await res.json()
+                this.requestedBooks = data.filter(book => book.status=='REQUESTED')
+                                        .map(book => {
+                                            return {"Book ID": book.id,"Name": book.name,"Author":book.author,
+                                                    "Requested By":book.requested_by.name}
+                                        })
+                }
+        },
+        async loadExpiredBooks(){
+            const res = await fetch('/book/all', {
+                headers: {
+                    "Authentication-Token": this.token
+                    }
+                })
+            if (res.ok) {
+                const data = await res.json()
+                this.expiredBooks = data.filter(book => book.status=='ISSUED')
+                                        .filter(book=> (new Date(book.issued_to.expiry) < new Date()))
+                                        .map(book => {
+                                            return {"Book ID": book.id,"Name": book.name,"Author":book.author,
+                                                    "Issued to":book.issued_to.name,"Expired On":this.formatDate(book.issued_to.expiry)}
+                                        })
+                }
+        },
+
         async loadUsers(){
             const users = await this.fetchUsers();
             // Array of promises to fetch book counts
@@ -86,6 +269,86 @@ export default {
                 });
             const books = await response.json();
             return {'issues_count':books.issues.length,'requests_count':books.requests.length};
+        },
+        formatDate(value) {
+            const date = new Date(value);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = date.toLocaleString('default', { month: 'short' });
+            const year = date.getFullYear();
+            const hours = date.getHours() % 12 || 12;
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+            return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+        },
+        async revokeBooks(){
+            var result = confirm("Are you sure you want to revoke the selected book(s)?");
+            if (result){
+                const res = await fetch('/admin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authentication-Token': this.token
+                        },
+                        body: JSON.stringify({
+                            'action' : 'REVOKE_MANY',
+                            'book_ids' : this.expiredBooksSelected
+                        })
+        
+                    })
+                    const data = await res.json()
+                    if (res.ok) {
+                        alert(data.message)
+                        this.$router.go(0)
+                    }
+                    else {
+                        alert(data.message)
+                    }
+             }
+        },
+        async approve(){
+            const res = await fetch('/admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': this.token
+                },
+                body: JSON.stringify({
+                    'action' : 'APPROVE_MANY',
+                    'book_ids' : this.requestsSelected
+                })
+            })
+            const data = await res.json()
+            if (res.ok) {
+                alert(data.message)
+                this.$router.go(0)
+            }
+            else {
+                this.error = data.message
+            }
+        },
+        async reject(){
+            var result = confirm("Are you sure you want to reject the selected request(s)?");
+            if (result){
+                const res = await fetch('/admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authentication-Token': this.token
+                    },
+                    body: JSON.stringify({
+                        'action' : 'REJECT_MANY',
+                        'book_ids' : this.requestsSelected
+                    })
+                })
+                const data = await res.json()
+                if (res.ok) {
+                    alert(data.message)
+                    this.$router.go(0)
+                }
+                else {
+                    this.error = data.message
+                }
+            }
         },
     }
 }
