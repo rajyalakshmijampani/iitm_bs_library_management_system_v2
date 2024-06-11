@@ -7,15 +7,15 @@ export default {
             <div class="row mb-3" style="margin-top:5%;display:flex;justify-content:center;height:75vh;">
                 <b-card nobody style="border:1px solid #015668">    
                     <b-tabs pills card fill>
-                        <b-tab title="Graphical Summary" style="display:flex" active>
-                            <div style="width:50%; margin-right:2%;">
-                                <p id="nosections" style="margin-left:25%;font-size: 16px;">No sections to generate distribution</p>
-                                <canvas id="sectionSummaryChart" style="margin-top:1%" height="400"></canvas> 
-                            </div>
-                            <div style="width:50%;">
-                                <p id="noissues" style="margin-left:25%;font-size: 16px;">No issues/returns to generate trend</p>
-                                <canvas id="issueTrendChart" style="margin-top:1%" height="400"></canvas> 
-                            </div>                           
+                        <b-tab title="Graphical Summary" active>
+                            <div style="display: flex; flex-direction: row;justify-content: center;align-items: center;">
+                                <div style="width: 45%;height:400px;margin-right:2%">
+                                    <canvas id="sectionSummaryChart" style="display: block; width: 100% !important;height: 100% !important;"></canvas> 
+                                </div>
+                                <div style="width: 45%;height:400px">
+                                    <canvas id="issueTrendChart" style="display: block; height: 100% !important;"></canvas> 
+                                </div>
+                            </div>                          
                         </b-tab>
 
                         <b-tab title="Approve/Reject Requests">
@@ -100,11 +100,14 @@ export default {
             perPage: 5,
             currentPage: 1,
             section_labels:[],
-            section_books: []
+            section_books: [],
+            issue_dates:[],
+            issue_counts:[]
         }
     },
     mounted(){
         this.loadSectionSummary()
+        this.loadIssueSummary()
         this.loadRequestedBooks()
         this.loadExpiredBooks()
         this.loadUsers()
@@ -135,7 +138,6 @@ export default {
                                         })
                 this.section_labels = allSections.map(section => section.name);
                 this.section_books = allSections.map(section => section.bookcount)
-                document.getElementById("nosections").style.display = 'none';
                 this.drawSectionSummaryChart()
             }
         },
@@ -188,6 +190,7 @@ export default {
                                 font: {
                                     size: 16
                                 },
+                                color: 'black'
                             }
                             
                         },
@@ -197,11 +200,79 @@ export default {
                             font: {
                                 size: 20
                             },
+                            color: 'black',
                             padding: 30
                         }
                     }                
                 },
                 
+            });
+        },
+        async loadIssueSummary(){
+            const res = await fetch('/issuetrend', {
+                headers: {
+                    "Authentication-Token": this.token
+                    }
+                })
+            if (res.ok){
+                const issue_trend=await res.json()
+                this.issue_dates = issue_trend.map(issue => new Date(issue.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+                this.issue_counts = issue_trend.map(issue => issue.count)
+                this.drawIssueTrendChart()
+            }
+        },
+        drawIssueTrendChart(){
+            const ctx = document.getElementById('issueTrendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: this.issue_dates,
+                    datasets: [{
+                        label: 'Issue Counts',
+                        data: this.issue_counts,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192,0.2)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: 'black'
+                            },
+                            ticks: {
+                                maxTicksLimit: 15,
+                                color: 'black'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Count',
+                                color: 'black'
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                color: 'black'
+                              }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '30-days issue trend',
+                            font: {
+                                size: 20
+                            },
+                            color: 'black',
+                            padding: 30
+                        }
+                    }
+                }
             });
         },
         async loadRequestedBooks(){

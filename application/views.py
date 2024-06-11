@@ -6,7 +6,7 @@ from .datastore import datastore
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime,timedelta
 from io import BytesIO
-from sqlalchemy import and_
+from sqlalchemy import and_,func
 from sqlalchemy.orm import aliased
 
 @app.get('/')
@@ -822,4 +822,21 @@ def admin():
 
     else:
         return jsonify({"message": "Invalid action."}), 400
+
+@app.get('/issuetrend')
+@auth_required("token")
+@roles_required("admin")
+def issue_trend():
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=31)
+    all_dates = [start_date + timedelta(days=i) for i in range(31)]
+    issue_trend=[]
+
+    for date in all_dates:
+        count = db.session.query(func.count(Issue.id)).filter(
+                    func.date(Issue.issue_date) == func.date(date)).scalar() or 0
+        
+        issue_trend.append({'date': date.strftime('%Y-%m-%d'), 'count': count})
     
+    print(issue_trend)
+    return jsonify(issue_trend)

@@ -28,7 +28,7 @@ export default {
                         <Book :book="book"/>
                     </b-col>
                 </b-row>
-                <p style="margin-top:5%;margin-left:42%">Showing 4 results per page</p>
+                <p style="margin-top:5%;margin-left:42%">Showing 8 results per page</p>
                 <b-pagination  v-model="currentPage" :total-rows="totalBooks" :per-page="booksPerPage" style="justify-content:center"/>
             </b-container>
         </div>
@@ -42,7 +42,7 @@ export default {
             no_of_books: 0,
             error: null,
             currentPage: 1,
-            booksPerPage: 4,
+            booksPerPage: 8,
         }
     },
     computed: {
