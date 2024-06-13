@@ -80,7 +80,19 @@ export default {
                                 <p style="margin-top:5%;margin-left:42%">Showing 5 results per page</p>
                                 <b-pagination v-model="currentPage" :total-rows="userList.length" :per-page="perPage" style="justify-content:center"></b-pagination>
                             </div>
-                        </b-tab>                                                
+                        </b-tab>
+                        <b-tab title="Reports">
+                            <button class="btn btn-success" style="background-color: #015668; width:30%;margin-top:5%;margin-left:35%" 
+                                            :disabled="bookReportPending" @click='downloadBookReport'>
+                                            <span v-if="bookReportPending">Report generation in progress..</span>
+                                            <span v-else>Download Book Report</span>
+                            </button>
+                            <br>
+                            <button class="btn btn-success" style="background-color: #015668; width:30%;margin-top:5%;margin-left:35%"
+                                            >Download Issues Report</button>
+                                
+                            </div>
+                        </b-tab>                                                 
                     </b-tabs>
                 </b-card>
             </div>
@@ -103,7 +115,8 @@ export default {
             section_labels:[],
             section_books: [],
             issue_dates:[],
-            issue_counts:[]
+            issue_counts:[],
+            bookReportPending: false
         }
     },
     mounted(){
@@ -114,12 +127,6 @@ export default {
         this.loadUsers()
     },
     methods: {
-        isBooksAvailable(){
-            alert(this.section_books);
-            alert(this.section_books.reduce((total, num) => total + num, 0));
-            alert(this.section_books.reduce((total, num) => total + num, 0) !=0 );
-           return (this.section_books.reduce((total, num) => total + num, 0) != 0);
-        },
         onRowSelectedExpiredBooks(items){
             this.expiredBooksSelected = items.map(item=>item["Book ID"])
         },
@@ -438,6 +445,22 @@ export default {
                 else {
                     this.error = data.message
                 }
+            }
+        },
+        async downloadBookReport() {
+            this.bookReportPending = true
+            const res = await fetch('/download-books-csv')
+            const data = await res.json()
+            if (res.ok) {
+              const taskId = data['Task-ID']
+              const intv = setInterval(async () => {
+                const csv_res = await fetch(`/get-books-csv/${taskId}`)
+                if (csv_res.ok) {
+                  this.bookReportPending = false
+                  clearInterval(intv)
+                  window.location.href = `/get-books-csv/${taskId}`
+                }
+              }, 1000)
             }
         },
     }

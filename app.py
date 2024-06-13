@@ -6,11 +6,13 @@ from application.config import Config
 from application.datastore import datastore
 from werkzeug.security import generate_password_hash
 from application.worker import celery_init_app
+import flask_excel as excel
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 # api.init_app(app)
+excel.init_excel(app)
 
 with app.app_context():
     db.create_all()

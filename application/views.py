@@ -1,4 +1,4 @@
-from flask import current_app as app,jsonify,request,render_template,Response
+from flask import current_app as app,jsonify,request,render_template,Response,send_file
 from flask_security import auth_required, roles_required,current_user
 from flask_restful import marshal,fields
 from .models import Request,db,User,Book,Section,Issue,Purchase,Rating,book_section,Role
@@ -7,8 +7,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime,timedelta
 from io import BytesIO
 from sqlalchemy import and_,func
-from sqlalchemy.orm import aliased
-from .tasks import say_hello
+from .tasks import create_books_csv,create_issues_csv
+import flask_excel as excel
+from celery.result import AsyncResult
 
 @app.get('/')
 def home():
@@ -841,7 +842,16 @@ def issue_trend():
     
     return jsonify(issue_trend)
 
-@app.get('/sayhello')
-def sayhello():
-    t = say_hello.delay()
-    return jsonify({"task_id":t.id})
+@app.get('/download-books-csv')
+def download_books_csv():
+    task = create_books_csv.delay()
+    return jsonify({"Task-ID": task.id})
+
+@app.get('/get-books-csv/<task_id>')
+def get_cv(task_id):
+    res = AsyncResult(task_id)
+    if res.ready():
+        filename = res.result
+        return send_file(filename,as_attachment=True)
+    else:
+        return jsonify({"message": "Task pending"}),404
