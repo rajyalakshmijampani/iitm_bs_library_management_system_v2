@@ -1,6 +1,8 @@
 import router from "./router.js"
 import Navbar from "./components/Common/Navbar.js"
 
+// Navigation Guard
+
 router.beforeEach((to,from,next) => {
     if (to.name !== 'Login' && to.name !== 'Register' && !JSON.parse(localStorage.getItem('user')).token) next({name:'Login'})
     else next()

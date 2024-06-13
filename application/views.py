@@ -8,6 +8,7 @@ from datetime import datetime,timedelta
 from io import BytesIO
 from sqlalchemy import and_,func
 from sqlalchemy.orm import aliased
+from .tasks import say_hello
 
 @app.get('/')
 def home():
@@ -310,7 +311,7 @@ def untag_book():
 def delete_book(id):
     book = Book.query.get(id)  
     issues=Issue.query.filter_by(book_id=id).all()
-    requests=Request.filter_by(book_id=id).all()
+    requests=Request.query.filter_by(book_id=id).all()
     purchases=Purchase.query.filter_by(book_id=id).all()
     ratings=Rating.query.filter_by(book_id=id).all()
 
@@ -838,5 +839,9 @@ def issue_trend():
         
         issue_trend.append({'date': date.strftime('%Y-%m-%d'), 'count': count})
     
-    print(issue_trend)
     return jsonify(issue_trend)
+
+@app.get('/sayhello')
+def sayhello():
+    t = say_hello.delay()
+    return jsonify({"task_id":t.id})

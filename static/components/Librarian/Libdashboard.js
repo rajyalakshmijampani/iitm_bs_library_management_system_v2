@@ -12,6 +12,7 @@ export default {
                                 <div style="width: 45%;height:400px;margin-right:2%">
                                     <canvas id="sectionSummaryChart" style="display: block; width: 100% !important;height: 100% !important;"></canvas> 
                                 </div>
+                                
                                 <div style="width: 45%;height:400px">
                                     <canvas id="issueTrendChart" style="display: block; height: 100% !important;"></canvas> 
                                 </div>
@@ -113,6 +114,12 @@ export default {
         this.loadUsers()
     },
     methods: {
+        isBooksAvailable(){
+            alert(this.section_books);
+            alert(this.section_books.reduce((total, num) => total + num, 0));
+            alert(this.section_books.reduce((total, num) => total + num, 0) !=0 );
+           return (this.section_books.reduce((total, num) => total + num, 0) != 0);
+        },
         onRowSelectedExpiredBooks(items){
             this.expiredBooksSelected = items.map(item=>item["Book ID"])
         },
@@ -137,9 +144,9 @@ export default {
                                         return {"name":section.name,"bookcount":section.books.length}
                                         })
                 this.section_labels = allSections.map(section => section.name);
-                this.section_books = allSections.map(section => section.bookcount)
-                this.drawSectionSummaryChart()
+                this.section_books = allSections.map(section => section.bookcount);
             }
+            this.drawSectionSummaryChart();
         },
         drawSectionSummaryChart(){
             const generateRandomColor = () => {
@@ -170,7 +177,19 @@ export default {
 
             const backgroundColors = generateRandomColors(this.section_labels.length)
 
-            const ctx = document.getElementById('sectionSummaryChart').getContext('2d');
+            const canvas = document.getElementById('sectionSummaryChart');
+            const ctx = canvas.getContext('2d');
+
+            if (this.section_books.length === 0 || this.section_books.every(value => value == 0)) {
+                ctx.save();
+                ctx.font = '15px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                ctx.fillText('No data for section-wise books',canvas.width/2,canvas.height/2);
+                ctx.restore();
+            }
+            else{
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -206,7 +225,7 @@ export default {
                     }                
                 },
                 
-            });
+            })};
         },
         async loadIssueSummary(){
             const res = await fetch('/issuetrend', {
