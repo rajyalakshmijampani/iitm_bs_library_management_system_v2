@@ -847,8 +847,13 @@ def download_books_csv():
     task = create_books_csv.delay()
     return jsonify({"Task-ID": task.id})
 
-@app.get('/get-books-csv/<task_id>')
-def get_cv(task_id):
+@app.get('/download-issues-csv')
+def download_issues_csv():
+    task = create_issues_csv.delay()
+    return jsonify({"Task-ID": task.id})
+
+@app.get('/get-csv/<task_id>')
+def get_books_csv(task_id):
     res = AsyncResult(task_id)
     if res.ready():
         filename = res.result

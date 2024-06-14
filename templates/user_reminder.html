@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder - Book(s) Return</title>
+</head>
+<body>
+    <p>Dear User,<br><br>Please find below list of books issued to you. Hope you enjoy reading and return the books on time..!!</p><br>
+    <table border="1">
+        <thead>
+            <tr>
+                <th style="text-align: center;">Book</th>
+                <th style="text-align: center;">Author</th>
+                <th style="text-align: center;">Date of Issue</th>
+                <th style="text-align: center;">Expected date of Return</th>
+            </tr>
+        </thead>
+        <tbody style="text-align: center;">
+            {% for issue in issues %}
+                <tr>
+                    <td style="vertical-align: middle;">{{issue.book_name}}</td>
+                    <td style="vertical-align: middle;">{{issue.author}}</td>
+                    <td style="vertical-align: middle;">{{issue.issue_date}}</td>
+                    <td style="vertical-align: middle;">{{issue.return_date}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table> 
+</body>
+</html>

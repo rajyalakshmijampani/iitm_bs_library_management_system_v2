@@ -89,7 +89,10 @@ export default {
                             </button>
                             <br>
                             <button class="btn btn-success" style="background-color: #015668; width:30%;margin-top:5%;margin-left:35%"
-                                            >Download Issues Report</button>
+                                            :disabled="issuesReportPending" @click='downloadIssuesReport'>
+                                            <span v-if="issuesReportPending">Report generation in progress..</span>
+                                            <span v-else>Download Issues Report</span>
+                            </button>
                                 
                             </div>
                         </b-tab>                                                 
@@ -116,7 +119,8 @@ export default {
             section_books: [],
             issue_dates:[],
             issue_counts:[],
-            bookReportPending: false
+            bookReportPending: false,
+            issuesReportPending: false
         }
     },
     mounted(){
@@ -450,18 +454,38 @@ export default {
         async downloadBookReport() {
             this.bookReportPending = true
             const res = await fetch('/download-books-csv')
+            await new Promise(resolve => setTimeout(resolve, 3000));
             const data = await res.json()
             if (res.ok) {
               const taskId = data['Task-ID']
               const intv = setInterval(async () => {
-                const csv_res = await fetch(`/get-books-csv/${taskId}`)
+                const csv_res = await fetch(`/get-csv/${taskId}`)
                 if (csv_res.ok) {
                   this.bookReportPending = false
                   clearInterval(intv)
-                  window.location.href = `/get-books-csv/${taskId}`
+                  alert('Book Report is ready..!!')
+                  window.location.href = `/get-csv/${taskId}`
                 }
               }, 1000)
             }
         },
+        async downloadIssuesReport() {
+            this.issuesReportPending = true
+            const res = await fetch('/download-issues-csv')
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            const data = await res.json()
+            if (res.ok) {
+              const taskId = data['Task-ID']
+              const intv = setInterval(async () => {
+                const csv_res = await fetch(`/get-csv/${taskId}`)
+                if (csv_res.ok) {
+                  this.issuesReportPending = false
+                  clearInterval(intv)
+                  alert('Issues Report is ready..!!')
+                  window.location.href = `/get-csv/${taskId}`
+                }
+              }, 1000)
+            }
+        }
     }
 }
