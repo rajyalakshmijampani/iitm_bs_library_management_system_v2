@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Activity Report</title>
+</head>
+<body>
+    <p>Dear Admin,<br><br>Please find below report for past 30-days' activity at ClickReads.</p>
+    <h4>New Additions:</h4>
+    {% if latest_books %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th style="text-align: center;">ID</th>
+                    <th style="text-align: center;">Name</th>
+                    <th style="text-align: center;">Author</th>
+                    <th style="text-align: center;">Sections</th>
+                    <th style="text-align: center;">Average Rating</th>
+                    <th style="text-align: center;">Date of Creation</th>
+                </tr>
+            </thead>
+            <tbody style="text-align: center;">
+                {% for book in latest_books %}
+                    <tr>
+                        <td style="vertical-align: middle;">{{book.id}}</td>
+                        <td style="vertical-align: middle;">{{book.name}}</td>
+                        <td style="vertical-align: middle;">{{book.author}}</td>
+                        <td style="vertical-align: middle;">{{book.sections}}</td>
+                        <td style="vertical-align: middle;">{{book.avg_rating}}</td>
+                        <td style="vertical-align: middle;">{{book.create_date}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No new additions to the collection.</p>
+    {% endif %}
+
+    <h4>Issues/Returns:</h4>
+    {% if latest_issues %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th style="text-align: center;">Book</th>
+                    <th style="text-align: center;">User Name</th>
+                    <th style="text-align: center;">Date of Issue</th>
+                    <th style="text-align: center;">Actual/Expected Date of Return</th>
+                    <th style="text-align: center;">Is_active_issue</th>
+                </tr>
+            </thead>
+            <tbody style="text-align: center;">
+                {% for issue in latest_issues %}
+                    <tr>
+                        <td style="vertical-align: middle;">{{issue.book_name}}</td>
+                        <td style="vertical-align: middle;">{{issue.user_name}}</td>
+                        <td style="vertical-align: middle;">{{issue.issue_date}}</td>
+                        <td style="vertical-align: middle;">{{issue["actual/expected_return_date"]}}</td>
+                        <td style="vertical-align: middle;">{{issue.is_active}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No issues and returns in the past month.</p>
+    {% endif %}
+    <br>
+    <p>Regards,</p>
+    <p>Team ClickReads</p>
+     
+</body>
+</html>

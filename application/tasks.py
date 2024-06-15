@@ -1,5 +1,5 @@
 from celery import shared_task
-from .models import db,Book,Section,book_section,Issue,User
+from .models import db,Issue,User,Role,Book
 import flask_excel as excel
 from sqlalchemy import text,distinct
 from .mail_service import send_message
@@ -56,4 +56,32 @@ def user_reminder(subject):
             with open('templates/user_reminder.html', 'r') as f:
                 template = Template(f.read())
                 send_message(user.email, subject, template.render(issues=user_issues))
+    return "OK"
+
+@shared_task(ignore_result=True)
+def admin_report(subject):
+    admin_role = Role.query.filter_by(name='admin').first()
+    admin = User.query.filter(User.roles.contains(admin_role)).first()
+    latest_books_query = text("SELECT b.id, b.name,b.author,COALESCE(GROUP_CONCAT(s.name, ';'), NULL) AS sections,b.price,avg(r.rating) as avg_rating,"\
+                              "b.status,strftime('%Y-%m-%d %H:%M', b.create_date) as create_date "\
+                            "FROM book b "\
+                            "LEFT JOIN rating r ON b.id = r.book_id "\
+                            "LEFT JOIN book_section bs ON b.id = bs.book_id "\
+                            "LEFT JOIN section s ON s.id = bs.section_id "\
+                            "WHERE b.create_date >= DATE('now', '-30 days') "\
+                            "GROUP BY b.id")
+    latest_books = db.session.execute(latest_books_query).all()
+    latest_issues_query = text("SELECT b.name as book_name,u.name as user_name,strftime('%Y-%m-%d %H:%M', i.issue_date) as issue_date,strftime('%Y-%m-%d %H:%M', i.return_date) as 'actual/expected_return_date', "\
+                        "CASE "\
+                        "WHEN i.is_active = 1 THEN 'True' "\
+                        "ELSE 'False' "\
+                        "END AS is_active "\
+                        "FROM issue i "\
+                        "JOIN book  b ON i.book_id = b.id "\
+                        "JOIN user u ON i.user_id = u.id "\
+                        "WHERE issue_date >= DATE('now', '-30 days') OR return_date >= DATE('now', '-30 days')")
+    latest_issues = db.session.execute(latest_issues_query).all()
+    with open('templates/admin_report.html', 'r') as f:
+            template = Template(f.read())
+            send_message(admin.email, subject, template.render(latest_books = latest_books, latest_issues=latest_issues))
     return "OK"

@@ -3,8 +3,8 @@ import Navbar from "/static/components/Common/Navbar.js"
 export default {
     template: `
     <Navbar>
-        <div class="col">
-            <div class="row mb-3" style="margin-top:5%;display:flex;justify-content:center;height:75vh;">
+        <div class="col" style="width: 85%;">
+            <div class="row mb-3" style="margin-top:5%;height:75vh;">
                 <b-card nobody style="border:1px solid #015668">    
                     <b-tabs pills card fill>
                         <b-tab title="Graphical Summary" active>
@@ -93,8 +93,6 @@ export default {
                                             <span v-if="issuesReportPending">Report generation in progress..</span>
                                             <span v-else>Download Issues Report</span>
                             </button>
-                                
-                            </div>
                         </b-tab>                                                 
                     </b-tabs>
                 </b-card>
