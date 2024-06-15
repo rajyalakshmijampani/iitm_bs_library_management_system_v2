@@ -7,3 +7,8 @@ class Config(object):
     MAX_BOOKS_ALLOWED = 5
     MAX_DAYS_OF_ISSUE = 7
     SECURITY_JOIN_USER_ROLES = 'RolesUsers'
+    # CACHE_TYPE = "RedisCache"
+    # CACHE_REDIS_HOST = "localhost"
+    # CACHE_REDIS_PORT = 6379
+    # CACHE_REDIS_DB = 2
+    # CACHE_DEFAULT_TIMEOUT = 3600

@@ -10,6 +10,12 @@ from sqlalchemy import and_,func
 from .tasks import create_books_csv,create_issues_csv
 import flask_excel as excel
 from celery.result import AsyncResult
+from flask_caching import Cache
+
+cache = Cache(config={'CACHE_TYPE': 'redis',
+                      'CACHE_REDIS_URL': 'redis://localhost:6379/2',
+                      'CACHE_DEFAULT_TIMEOUT': 3600})
+cache.init_app(app)
 
 @app.get('/')
 def home():
@@ -196,6 +202,7 @@ def create_book():
 
 @app.get('/book/all')
 @auth_required("token")
+@cache.cached(timeout=20)
 def get_books():
     books = Book.query.all()
     if not books:
