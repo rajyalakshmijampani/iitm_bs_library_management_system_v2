@@ -1,4 +1,4 @@
-from flask import current_app as app,jsonify,request,render_template,Response,send_file
+from flask import current_app as app,jsonify,request,render_template,Response,send_file,redirect
 from flask_security import auth_required, roles_required,current_user
 from flask_restful import marshal,fields
 from .models import Request,db,User,Book,Section,Issue,Purchase,Rating,book_section,Role
@@ -14,8 +14,13 @@ from flask_caching import Cache
 
 cache = Cache(config={'CACHE_TYPE': 'redis',
                       'CACHE_REDIS_URL': 'redis://localhost:6379/2',
-                      'CACHE_DEFAULT_TIMEOUT': 3600})
+                      'CACHE_DEFAULT_TIMEOUT': 60})
 cache.init_app(app)
+
+@app.get('/login')
+def login():
+    print("Redirecting to /#/")
+    return redirect('/#/')
 
 @app.get('/')
 def home():
@@ -196,13 +201,13 @@ def create_book():
     db.session.add(book)
     db.session.commit()
     marshalled_data = marshal(book, book_fields)
-    return jsonify({**marshalled_data, **{"message":"Book created successfully"}})
+    return jsonify({**marshalled_data, **{"message":"Book created successfully. It might take a minute to reflect."}})
 
 #---------------------READ------------------#
 
 @app.get('/book/all')
 @auth_required("token")
-@cache.cached(timeout=20)
+@cache.cached()
 def get_books():
     books = Book.query.all()
     if not books:
@@ -374,12 +379,13 @@ def create_section():
     db.session.add(section)
     db.session.commit()
     marshalled_data = marshal(section, section_fields)
-    return jsonify({**marshalled_data, **{"message":"Section created successfully"}})
+    return jsonify({**marshalled_data, **{"message":"Section created successfully. It might take a minute to reflect."}})
 
 #---------------------READ------------------#
 
 @app.get('/section/all')
 @auth_required("token")
+@cache.cached()
 def get_sections():
     sections = Section.query.all()
     if not sections:
