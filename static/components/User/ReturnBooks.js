@@ -53,7 +53,7 @@ export default {
     },
     methods: {
         toggleAll(checked) {
-            this.selected_books = checked ? Object.values(this.possible_books).map(book => book.id) : []
+            this.selected_books = checked ? Object.values(this.user_books).map(book => book.id) : []
         },
         clearMessage() {
             this.error = null

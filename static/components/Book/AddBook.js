@@ -103,10 +103,14 @@ export default {
                 this.error = null
                 const reader = new FileReader();
                 reader.onload = () => {
-                    if (reader.result)
-                        this.book.content = reader.result
-                    else
+                    if (reader.result){
+                        this.book.content = reader.result;
+                        this.error = null;
+                    }
+                    else{
+                        this.book.content = null
                         this.error = 'File is empty'
+                        }
                     };
                 reader.readAsText(file);
             }

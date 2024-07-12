@@ -13,8 +13,11 @@ def create_books_csv():
                     "LEFT JOIN section s ON s.id = bs.section_id " \
                     "GROUP BY b.id")
     books = db.session.execute(books_query).all()
-    columns = ["id","name","author","sections","price","status"]
-    csv_output = excel.make_response_from_query_sets(books,columns,"csv")
+    if not books:
+        csv_output = excel.make_response_from_array([['No issues found']],"csv")
+    else:
+        columns = ["id","name","author","sections","price","status"]
+        csv_output = excel.make_response_from_query_sets(books,columns,"csv")
     file_name="books.csv"
     
     with open(file_name,'wb') as f:
@@ -34,8 +37,11 @@ def create_issues_csv():
                         "JOIN book  b ON i.book_id = b.id "\
                         "JOIN user u ON i.user_id = u.id")
     issues = db.session.execute(issues_query).all()
-    columns = ["issue_id","book_name","user_name","issue_date","actual/expected_return_date","is_active"]
-    csv_output = excel.make_response_from_query_sets(issues,columns,"csv")
+    if not issues:
+        csv_output = excel.make_response_from_array([['No issues found']],"csv")
+    else:
+        columns = ["issue_id","book_name","user_name","issue_date","actual/expected_return_date","is_active"]
+        csv_output = excel.make_response_from_query_sets(issues,columns,"csv")
     file_name="issues.csv"
     
     with open(file_name,'wb') as f:

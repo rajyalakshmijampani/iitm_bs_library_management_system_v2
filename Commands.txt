@@ -1,0 +1,30 @@
+CMD:
+cd OneDrive/Documents/MAD2/Test_LMS
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+In CMD, netstat -an | findstr 6379
+
+WSL:
+
+cd /mnt/c/Users/rajya/OneDrive/Documents/MAD2/Test_LMS
+
+
+redis-server
+
+(If already using
+sudo lsof -i :6379
+sudo kill -9 PID)
+
+redis-cli
+select 2
+KEYS *
+redis-cli INFO stats | grep keyspace_
+
+source .venv/Scripts/activate
+celery -A app.celery_app worker -l INFO
+celery -A app.celery_app beat -l INFO
+
+~/go/bin/MailHog
+http://localhost:8025/

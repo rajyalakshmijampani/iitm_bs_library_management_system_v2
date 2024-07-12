@@ -32,19 +32,17 @@ with app.app_context():
 
     if not datastore.find_user(email='admin@email.com'):
         datastore.create_user(email='admin@email.com',password=generate_password_hash('admin'),name='admin',roles=['admin'])
-    if not datastore.find_user(email='user1@email.com'):
-        datastore.create_user(email='user1@email.com',password=generate_password_hash('user1'),name='user1',roles=['user'])
     
     db.session.commit()
 
-'''@celery_app.on_after_configure.connect
+@celery_app.on_after_configure.connect
 def send_reminder_email_to_users(sender,**kwargs):
     sender.add_periodic_task(20.0, user_reminder.s('Daily Reminder - Books pending for return'),name='User Reminder') #crontab(hour=19, minute=00)
 
 @celery_app.on_after_configure.connect
 def send_activity_report_to_admin(sender,**kwargs):
     sender.add_periodic_task(20.0, admin_report.s('Monthly Activity Report - ClickReads'),name='Admin Report') #crontab(hour=08, minute=00, day_of_month=1)
-'''
+
 
 if(__name__=='__main__'):
     app.run(debug=True)

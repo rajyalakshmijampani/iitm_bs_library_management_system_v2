@@ -14,7 +14,7 @@ from flask_caching import Cache
 
 cache = Cache(config={'CACHE_TYPE': 'redis',
                       'CACHE_REDIS_URL': 'redis://localhost:6379/2',
-                      'CACHE_DEFAULT_TIMEOUT': 60})
+                      'CACHE_DEFAULT_TIMEOUT': 30})
 cache.init_app(app)
 
 @app.get('/login')
@@ -207,7 +207,7 @@ def create_book():
 
 @app.get('/book/all')
 @auth_required("token")
-@cache.cached()
+#@cache.cached()
 def get_books():
     books = Book.query.all()
     if not books:
@@ -385,7 +385,7 @@ def create_section():
 
 @app.get('/section/all')
 @auth_required("token")
-@cache.cached()
+#@cache.cached()
 def get_sections():
     sections = Section.query.all()
     if not sections:

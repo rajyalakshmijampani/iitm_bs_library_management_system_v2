@@ -6,9 +6,9 @@ db = SQLAlchemy()
 
 class User(db.Model,UserMixin):
     id=db.Column(db.Integer(),primary_key=True)
-    email=db.Column(db.String,unique=True)
+    email=db.Column(db.String(50),unique=True)
     password=db.Column(db.String)
-    name=db.Column(db.String)
+    name=db.Column(db.String(25))
     active = db.Column(db.Boolean)
     fs_uniquifier = db.Column(db.String(255),unique=True,nullable=False)
     roles = db.relationship('Role',secondary='roles_users',
@@ -31,9 +31,9 @@ book_section = db.Table('book_section',
 
 class Book(db.Model):
     id=db.Column(db.Integer,primary_key=True)
-    name=db.Column(db.String,unique=True)
+    name=db.Column(db.String(25),unique=True)
     content=db.Column(db.String)
-    author=db.Column(db.String)
+    author=db.Column(db.String(20))
     price=db.Column(db.Integer)
     status = db.Column(db.String, default = 'AVAILABLE')  # ISSUED,REQUESTED,AVAILABLE    
     create_date=db.Column(db.DateTime)
@@ -46,7 +46,7 @@ class Book(db.Model):
 
 class Section(db.Model):
     id=db.Column(db.Integer,primary_key=True)
-    name=db.Column(db.String,unique=True)
+    name=db.Column(db.String(25),unique=True)
     description=db.Column(db.String(255))
 
 class Issue(db.Model):

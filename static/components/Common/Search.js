@@ -83,10 +83,10 @@ export default {
                 if (res.ok) {
                     const data = await res.json()
                     if (this.param == 'name'){
-                        this.search_results = data.filter(item => item.name.toLowerCase().includes(this.value))
+                        this.search_results = data.filter(item => item.name.toLowerCase().includes(this.value.toLowerCase()))
                     }
                     else if (this.param == 'author'){
-                        this.search_results = data.filter(item => item.author.toLowerCase().includes(this.value))
+                        this.search_results = data.filter(item => item.author.toLowerCase().includes(this.value.toLowerCase()))
                     }
                     this.no_of_results = Object.keys(this.search_results).length
                 }
